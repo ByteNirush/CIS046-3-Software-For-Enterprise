@@ -1,5 +1,4 @@
-// Purpose: Server configuration loader with environment variable validation.
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity)
+// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
 
 import dotenv from 'dotenv';
 import path from 'path';
@@ -30,7 +29,7 @@ export const environment = process.env.NODE_ENV || 'development';
 export const env = environment;
 export const sessionSecret = process.env.SESSION_SECRET;
 export const bananaApiUrl = process.env.BANANA_API_URL || 'https://marcconrad.com/uob/banana/api.php?out=json';
-export const databasePath = process.env.DATABASE_PATH || './db/banana_arcade.db';
+export const databasePath = process.env.DATABASE_PATH || './data/banana.db';
 export const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 
 const config = {
@@ -44,4 +43,3 @@ const config = {
 };
 
 export default config;
-

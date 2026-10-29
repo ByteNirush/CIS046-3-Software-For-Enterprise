@@ -1,9 +1,34 @@
-// Purpose: Placeholder component for NavBar.
-// Author: [my name] | External/AI code in this file: none yet
+// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
+
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth.js';
 
 function NavBar() {
-  return <div>NavBar</div>;
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  return (
+    <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid #ccc' }}>
+      <Link to="/">Home</Link>
+      <Link to="/leaderboard">Leaderboard</Link>
+      {user ? (
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <span>{user.username}</span>
+          <button type="button" onClick={handleLogout}>Logout</button>
+        </div>
+      ) : (
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.75rem' }}>
+          <Link to="/login">Login</Link>
+          <Link to="/signup">Signup</Link>
+        </div>
+      )}
+    </nav>
+  );
 }
 
 export default NavBar;
-

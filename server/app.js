@@ -1,8 +1,9 @@
-// Purpose: Express server entry point.
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity) - standard Express setup boilerplate
+// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
 
 import express from 'express';
+import session from 'express-session';
 import config from './config/index.js';
+import authRouter from './routes/auth.js';
 
 const app = express();
 
@@ -11,6 +12,25 @@ app.disable('x-powered-by');
 
 // Limit JSON request bodies to 10kb
 app.use(express.json({ limit: '10kb' }));
+
+// Session middleware
+// NOTE: MemoryStore is used for development. It is not suitable for production
+// because it leaks memory, cannot scale across multiple processes, and loses all sessions on restart.
+app.use(
+  session({
+    name: 'banana.sid',
+    secret: config.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    store: new session.MemoryStore(),
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: config.environment === 'production',
+      maxAge: 2 * 60 * 60 * 1000, // 2-hour session expiry
+    },
+  })
+);
 
 // API router
 const apiRouter = express.Router();
@@ -22,6 +42,9 @@ apiRouter.get('/health', (req, res) => {
     time: new Date().toISOString(),
   });
 });
+
+// Mount authentication routes at /api/auth
+apiRouter.use('/auth', authRouter);
 
 // JSON 404 handler for unmatched API routes
 apiRouter.use((req, res) => {
