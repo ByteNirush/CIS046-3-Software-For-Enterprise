@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -55,6 +53,8 @@ export const puzzleMaxAttempts = parsePositiveInteger(process.env.PUZZLE_MAX_ATT
 export const bananaTimeoutMs = parsePositiveInteger(process.env.BANANA_TIMEOUT_MS, 'BANANA_TIMEOUT_MS', 5000);
 export const databasePath = process.env.DATABASE_PATH || './data/banana.db';
 export const clientOrigin = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+export const playTokenTtlSeconds = parsePositiveInteger(process.env.PLAY_TOKEN_TTL_SECONDS, 'PLAY_TOKEN_TTL_SECONDS', 900);
+export const runMaxSeconds = parsePositiveInteger(process.env.RUN_MAX_SECONDS, 'RUN_MAX_SECONDS', 600);
 
 const config = {
   port,
@@ -67,6 +67,8 @@ const config = {
   bananaTimeoutMs,
   databasePath,
   clientOrigin,
+  playTokenTtlSeconds,
+  runMaxSeconds,
 };
 
 export default config;

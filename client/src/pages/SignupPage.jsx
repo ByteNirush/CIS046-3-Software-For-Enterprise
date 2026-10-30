@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';

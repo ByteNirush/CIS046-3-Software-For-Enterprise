@@ -45,4 +45,31 @@
 | `server/package.json` | AI-assisted (Antigravity) | Added `"test": "node --test"` script | 2026-10-30 |
 | `server/tests/puzzleService.test.js` | AI-assisted (Antigravity) | Automated unit tests covering correct, wrong, exhausted attempts, expired, other user, and duplicate answers using in-memory SQLite and mocked bananaService | 2026-10-30 |
 | `client/src/api/puzzle.js` | AI-assisted (Antigravity) | Client API functions for `newPuzzle` and `submitAnswer` with error status attachment | 2026-10-30 |
-| `client/src/pages/PuzzlePage.jsx` | AI-assisted (Antigravity) | Puzzle gate UI with countdown timer, single-digit input, StrictMode mount guard, all status states, and credit line | 2026-10-30 |
+| `client/src/pages/PuzzlePage.jsx` | AI-assisted (Antigravity) | Puzzle gate UI with countdown timer, single-digit input, StrictMode mount guard, all status states, and unlocked play game link | 2026-10-30 |
+| `server/.env.example` | AI-assisted (Antigravity) | Added `PLAY_TOKEN_TTL_SECONDS=900` and `RUN_MAX_SECONDS=600` defaults | 2026-10-30 |
+| `server/.env` | AI-assisted (Antigravity) | Configured `PLAY_TOKEN_TTL_SECONDS` and `RUN_MAX_SECONDS` environment variables | 2026-10-30 |
+| `server/config/index.js` | AI-assisted (Antigravity) | Validated `PLAY_TOKEN_TTL_SECONDS` and `RUN_MAX_SECONDS` as positive integers at startup | 2026-10-30 |
+| `server/db/schema.sql` | AI-assisted (Antigravity) | Appended `play_tokens` table with status constraint, foreign keys to users and puzzles, and user index | 2026-10-30 |
+| `server/services/tokenService.js` | AI-assisted (Antigravity) | Implemented play token lifecycle (`createTokenForPuzzle`, `expireStaleTokens`, `countAvailable`, and atomic `startRun`) | 2026-10-30 |
+| `server/services/puzzleService.js` | AI-assisted (Antigravity) | Integrated transactional play token issuance upon correct answer and returned `unlocked: true` flag | 2026-10-30 |
+| `server/middleware/rateLimiters.js` | AI-assisted (Antigravity) | Added `gameLimiter` (10 requests per minute per user on POST /api/game/start) returning 429 JSON | 2026-10-30 |
+| `server/controllers/gameController.js` | AI-assisted (Antigravity) | Implemented `getStatus` (available tokens) and `start` (spend token and return runId) HTTP controllers | 2026-10-30 |
+| `server/routes/game.js` | AI-assisted (Antigravity) | Mounted `/api/game` router with `requireLogin`, `gameLimiter`, and `requireJson` protections | 2026-10-30 |
+| `server/app.js` | AI-assisted (Antigravity) | Mounted `/api/game` router under Express `/api` pipeline | 2026-10-30 |
+| `server/tests/puzzleService.test.js` | AI-assisted (Antigravity) | Updated test assertions to expect `unlocked: true` on correct answers | 2026-10-30 |
+| `server/tests/tokenService.test.js` | AI-assisted (Antigravity) | Automated unit tests covering all token lifecycle behaviors and transaction guarantees | 2026-10-30 |
+| `client/package.json` | AI-assisted (Antigravity) | Added `"test": "node --test"` script for client unit tests | 2026-10-30 |
+| `client/src/events/emitter.js` | AI-assisted (Antigravity) | Implemented custom `EventEmitter` class with `on`, `off`, `emit`, and unsubscribe cleanup function | 2026-10-30 |
+| `client/src/game/config.js` | AI-assisted (Antigravity) | Game configuration constants (dimensions, speeds, intervals, lives, frame caps, collision sizes) | 2026-10-30 |
+| `client/src/game/collision.js` | AI-assisted (Antigravity) | Pure function `rectsOverlap` for 2D axis-aligned bounding box collision detection | 2026-10-30 |
+| `client/src/game/input.js` | AI-assisted (Antigravity) | Input controller tracking keyboard (Arrows, A/D) and pointer/touch canvas drag with listener cleanup | 2026-10-30 |
+| `client/src/game/entities.js` | AI-assisted (Antigravity) | Plain JS entity classes for `Basket` and `FallingItem` with bounds and physics updates | 2026-10-30 |
+| `client/src/game/Game.js` | AI-assisted (Antigravity) | Plain JavaScript game engine running requestAnimationFrame loop, delta time capping, visibility pauses, event emissions, and canvas rendering (no external art, sounds, or game libraries) | 2026-10-30 |
+| `client/tests/collision.test.js` | AI-assisted (Antigravity) | Unit tests verifying rectangle collision overlap, non-overlap, edge touching, and invalid bounds | 2026-10-30 |
+| `client/tests/emitter.test.js` | AI-assisted (Antigravity) | Unit tests verifying event subscription, emission, payload delivery, off, and unsubscribe safety | 2026-10-30 |
+| `client/src/api/game.js` | AI-assisted (Antigravity) | Client API functions for `getStatus` and `startGame` with HTTP status error attachment | 2026-10-30 |
+| `client/src/components/GameCanvas.jsx` | AI-assisted (Antigravity) | Responsive canvas component mounting Game engine, StrictMode safe, rendering HUD from events | 2026-10-30 |
+| `client/src/pages/GamePage.jsx` | AI-assisted (Antigravity) | Game lobby and active game page handling token availability, Start game action, game over stats, and navigation | 2026-10-30 |
+
+> **Note on Assets & Libraries**: No external art, sounds, or third-party game frameworks/libraries are used. The Banana Catch game is built in vanilla JavaScript using the native HTML5 Canvas 2D API, standard Unicode emojis, and browser input/animation primitives.
+

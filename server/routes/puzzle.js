@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import express from 'express';
 import { createNewPuzzle, submitGuess } from '../controllers/puzzleController.js';
 import { requireLogin } from '../middleware/requireLogin.js';

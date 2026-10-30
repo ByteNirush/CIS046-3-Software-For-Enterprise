@@ -1,6 +1,5 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { newPuzzle, submitAnswer } from '../api/puzzle.js';
 
 function PuzzlePage() {
@@ -153,14 +152,29 @@ function PuzzlePage() {
               {isSolved && (
                 <div style={{ margin: '1.5rem 0' }}>
                   <p style={{ color: '#2e7d32', fontWeight: 'bold', fontSize: '1.25rem' }}>
-                    Puzzle solved!
+                    Puzzle solved! You unlocked a game play!
                   </p>
-                  <button disabled style={{ padding: '0.5rem 1.5rem', cursor: 'not-allowed', opacity: 0.6 }}>
-                    Play game
-                  </button>
-                  <p style={{ fontStyle: 'italic', color: '#666', fontSize: '0.9rem', marginTop: '0.5rem' }}>
-                    Coming in the next step
-                  </p>
+                  {result?.unlocked ? (
+                    <Link
+                      to="/game"
+                      style={{
+                        display: 'inline-block',
+                        padding: '0.6rem 1.5rem',
+                        backgroundColor: '#4caf50',
+                        color: '#fff',
+                        textDecoration: 'none',
+                        borderRadius: '4px',
+                        fontWeight: 'bold',
+                        fontSize: '1rem',
+                      }}
+                    >
+                      Play game
+                    </Link>
+                  ) : (
+                    <button disabled style={{ padding: '0.5rem 1.5rem', cursor: 'not-allowed', opacity: 0.6 }}>
+                      Play game
+                    </button>
+                  )}
                 </div>
               )}
 

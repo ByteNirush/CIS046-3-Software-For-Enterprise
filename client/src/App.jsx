@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import { Routes, Route } from 'react-router-dom';
 import NavBar from './components/NavBar.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';

@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 async function handleResponse(response) {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {

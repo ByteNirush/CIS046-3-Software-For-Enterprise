@@ -1,4 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
 //
 // Real observed Banana API response structure:
 // Endpoint: http://marcconrad.com/uob/banana/api.php?out=json&base64=yes

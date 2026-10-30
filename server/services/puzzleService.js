@@ -1,9 +1,8 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import crypto from 'crypto';
 import defaultDb from '../db/index.js';
 import config from '../config/index.js';
 import { fetchPuzzle as defaultFetchPuzzle } from './bananaService.js';
+import { createTokenForPuzzle } from './tokenService.js';
 
 let activeDb = defaultDb;
 
@@ -114,7 +113,9 @@ export function checkAnswer(userId, puzzleId, guess, customDb) {
       dbToUse
         .prepare("UPDATE puzzles SET attempts = ?, status = 'solved' WHERE id = ?")
         .run(newAttempts, puzzleId);
-      return { correct: true };
+      // Issue play token inside the same transaction
+      createTokenForPuzzle(dbToUse, userId, puzzleId);
+      return { correct: true, unlocked: true };
     }
 
     if (newAttempts >= config.puzzleMaxAttempts) {

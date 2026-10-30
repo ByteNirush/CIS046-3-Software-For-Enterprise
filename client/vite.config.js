@@ -1,6 +1,4 @@
 // Purpose: Vite configuration with React plugin and /api development proxy.
-// Author: [my name] | External/AI code in this file: none yet
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 

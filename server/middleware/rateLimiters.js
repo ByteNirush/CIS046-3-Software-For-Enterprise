@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import rateLimit from 'express-rate-limit';
 
 export const authRateLimiter = rateLimit({
@@ -27,7 +25,21 @@ export const puzzleLimiter = rateLimit({
   },
 });
 
+export const gameLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute per logged-in user
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => String(req.session?.userId || req.session?.user?.id || 'guest'),
+  validate: { keyGeneratorIpFallback: false },
+  message: { error: 'Too many requests, slow down' },
+  handler: (req, res, next, options) => {
+    res.status(429).json(options.message);
+  },
+});
+
 export default {
   authRateLimiter,
   puzzleLimiter,
+  gameLimiter,
 };

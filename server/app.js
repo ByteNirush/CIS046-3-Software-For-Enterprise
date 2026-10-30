@@ -1,10 +1,9 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import express from 'express';
 import session from 'express-session';
 import config from './config/index.js';
 import authRouter from './routes/auth.js';
 import puzzleRouter from './routes/puzzle.js';
+import gameRouter from './routes/game.js';
 import { BananaServiceError } from './services/bananaService.js';
 
 const app = express();
@@ -50,6 +49,9 @@ apiRouter.use('/auth', authRouter);
 
 // Mount puzzle gate routes at /api/puzzle
 apiRouter.use('/puzzle', puzzleRouter);
+
+// Mount game routes at /api/game
+apiRouter.use('/game', gameRouter);
 
 // JSON 404 handler for unmatched API routes
 apiRouter.use((req, res) => {

@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';

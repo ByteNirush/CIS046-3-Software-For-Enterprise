@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import { createContext, useState, useEffect } from 'react';
 import { signup as apiSignup, login as apiLogin, logout as apiLogout, getMe as apiGetMe } from '../api/auth.js';
 

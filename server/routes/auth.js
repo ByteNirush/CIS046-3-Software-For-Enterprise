@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import express from 'express';
 import { signup, login, logout, getMe } from '../controllers/authController.js';
 import { authRateLimiter } from '../middleware/rateLimiters.js';

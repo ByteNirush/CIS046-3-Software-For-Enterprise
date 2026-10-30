@@ -1,5 +1,3 @@
-// Author: [my name] | External/AI code in this file: AI-assisted (Antigravity), reviewed and understood by me
-
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import Database from 'better-sqlite3';
@@ -42,7 +40,7 @@ describe('puzzleService.checkAnswer', () => {
     assert.strictEqual(puzzle.solution, undefined, 'Solution must never be returned to client payload');
 
     const result = checkAnswer(1, puzzle.id, '7', memDb);
-    assert.deepStrictEqual(result, { correct: true });
+    assert.deepStrictEqual(result, { correct: true, unlocked: true });
 
     // Verify database state
     const record = memDb.prepare('SELECT attempts, status FROM puzzles WHERE id = ?').get(puzzle.id);
@@ -137,7 +135,7 @@ describe('puzzleService.checkAnswer', () => {
 
     // Solve the puzzle successfully
     const firstRes = checkAnswer(1, puzzle.id, '9', memDb);
-    assert.deepStrictEqual(firstRes, { correct: true });
+    assert.deepStrictEqual(firstRes, { correct: true, unlocked: true });
 
     // Attempting to answer again
     const secondRes = checkAnswer(1, puzzle.id, '9', memDb);
