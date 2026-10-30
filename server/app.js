@@ -4,6 +4,8 @@ import express from 'express';
 import session from 'express-session';
 import config from './config/index.js';
 import authRouter from './routes/auth.js';
+import puzzleRouter from './routes/puzzle.js';
+import { BananaServiceError } from './services/bananaService.js';
 
 const app = express();
 
@@ -46,6 +48,9 @@ apiRouter.get('/health', (req, res) => {
 // Mount authentication routes at /api/auth
 apiRouter.use('/auth', authRouter);
 
+// Mount puzzle gate routes at /api/puzzle
+apiRouter.use('/puzzle', puzzleRouter);
+
 // JSON 404 handler for unmatched API routes
 apiRouter.use((req, res) => {
   res.status(404).json({ error: 'Not Found' });
@@ -56,6 +61,13 @@ app.use('/api', apiRouter);
 
 // Central error-handling middleware
 app.use((err, req, res, next) => {
+  // Map BananaServiceError to 502 Bad Gateway with generic friendly message
+  if (err instanceof BananaServiceError || err.name === 'BananaServiceError') {
+    return res.status(502).json({
+      error: 'Puzzle service is unavailable, please try again shortly',
+    });
+  }
+
   const status = err.status || err.statusCode || 500;
   const body = {
     error: err.message || 'Internal Server Error',

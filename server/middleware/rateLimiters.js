@@ -13,5 +13,21 @@ export const authRateLimiter = rateLimit({
   },
 });
 
-export default authRateLimiter;
+export const puzzleLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 20, // 20 requests per 10 minutes per logged-in user
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Keyed by req.session.userId as required
+  keyGenerator: (req) => String(req.session?.userId || req.session?.user?.id || 'guest'),
+  validate: { keyGeneratorIpFallback: false },
+  message: { error: 'Too many puzzles requested, slow down' },
+  handler: (req, res, next, options) => {
+    res.status(429).json(options.message);
+  },
+});
 
+export default {
+  authRateLimiter,
+  puzzleLimiter,
+};

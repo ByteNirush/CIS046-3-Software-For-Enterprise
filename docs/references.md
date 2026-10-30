@@ -27,3 +27,22 @@
 | `client/src/pages/SignupPage.jsx` | AI-assisted (Antigravity) | Controlled signup form with input validation, error handling, autocomplete attributes, and redirect | 2026-10-29 |
 | `client/src/pages/LandingPage.jsx` | AI-assisted (Antigravity) | Landing page component introducing Banana Arcade with navigation to login, signup, or gameplay | 2026-10-29 |
 | `docs/references.md` | AI-assisted (Antigravity) | Documented external and AI-assisted code contributions | 2026-10-29 |
+| `Banana API` | [http://marcconrad.com/uob/banana/doc.php](http://marcconrad.com/uob/banana/doc.php) | Third-party banana puzzle generator API; subject to discontinuation without notice and non-commercial use only | 2026-10-30 |
+| `server/.env.example` | AI-assisted (Antigravity) | Added Banana API URL and puzzle configuration defaults (`PUZZLE_TTL_SECONDS`, `PUZZLE_MAX_ATTEMPTS`, `BANANA_TIMEOUT_MS`) | 2026-10-30 |
+| `server/.env` | AI-assisted (Antigravity) | Added Banana API URL and puzzle configuration environment variables | 2026-10-30 |
+| `server/config/index.js` | AI-assisted (Antigravity) | Added URL parsing and positive integer validations for puzzle and Banana API settings | 2026-10-30 |
+| `server/db/schema.sql` | AI-assisted (Antigravity) | Appended `puzzles` table definition with status check constraint, UUID primary key, foreign key, and user index | 2026-10-30 |
+| `server/services/bananaService.js` | AI-assisted (Antigravity) | Implemented Banana API integration with built-in fetch, AbortController timeout, validation, and generic `BananaServiceError` | 2026-10-30 |
+| `server/services/puzzleService.js` | AI-assisted (Antigravity) | Implemented puzzle lifecycle management (`createPuzzle`, transactional `checkAnswer`, `cleanupOldPuzzles`) | 2026-10-30 |
+| `server/middleware/rateLimiters.js` | AI-assisted (Antigravity) | Added `puzzleLimiter` (20 requests per 10 mins keyed by `req.session.userId`) returning 429 JSON | 2026-10-30 |
+| `server/middleware/requireLogin.js` | AI-assisted (Antigravity) | Added session userId synchronization to support both `req.session.userId` and `req.session.user.id` | 2026-10-30 |
+| `server/middleware/requireJson.js` | AI-assisted (Antigravity) | Extracted shared middleware ensuring POST bodies provide `Content-Type: application/json` | 2026-10-30 |
+| `server/controllers/authController.js` | AI-assisted (Antigravity) | Stored `req.session.userId` on signup and login | 2026-10-30 |
+| `server/routes/auth.js` | AI-assisted (Antigravity) | Updated to import shared `requireJson` middleware | 2026-10-30 |
+| `server/controllers/puzzleController.js` | AI-assisted (Antigravity) | Implemented HTTP controllers mapping puzzle service results to 201, 200, 400, 404, 409, 410 statuses | 2026-10-30 |
+| `server/routes/puzzle.js` | AI-assisted (Antigravity) | Created puzzle router mounted at `/api/puzzle` with `requireLogin`, `puzzleLimiter`, and `requireJson` guards | 2026-10-30 |
+| `server/app.js` | AI-assisted (Antigravity) | Mounted `/api/puzzle` router and mapped `BananaServiceError` to 502 with generic friendly message | 2026-10-30 |
+| `server/package.json` | AI-assisted (Antigravity) | Added `"test": "node --test"` script | 2026-10-30 |
+| `server/tests/puzzleService.test.js` | AI-assisted (Antigravity) | Automated unit tests covering correct, wrong, exhausted attempts, expired, other user, and duplicate answers using in-memory SQLite and mocked bananaService | 2026-10-30 |
+| `client/src/api/puzzle.js` | AI-assisted (Antigravity) | Client API functions for `newPuzzle` and `submitAnswer` with error status attachment | 2026-10-30 |
+| `client/src/pages/PuzzlePage.jsx` | AI-assisted (Antigravity) | Puzzle gate UI with countdown timer, single-digit input, StrictMode mount guard, all status states, and credit line | 2026-10-30 |

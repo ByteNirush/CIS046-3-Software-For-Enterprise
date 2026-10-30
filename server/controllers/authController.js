@@ -39,6 +39,7 @@ export async function signup(req, res, next) {
       if (err) {
         return next(err);
       }
+      req.session.userId = userId;
       req.session.user = { id: userId, username };
       req.session.save((saveErr) => {
         if (saveErr) {
@@ -77,6 +78,7 @@ export async function login(req, res, next) {
       if (err) {
         return next(err);
       }
+      req.session.userId = user.id;
       req.session.user = { id: user.id, username: user.username };
       req.session.save((saveErr) => {
         if (saveErr) {
@@ -108,4 +110,3 @@ export function logout(req, res, next) {
 export function getMe(req, res) {
   return res.status(200).json({ user: req.session.user });
 }
-
