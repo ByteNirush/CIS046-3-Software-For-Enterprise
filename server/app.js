@@ -1,9 +1,12 @@
 import express from 'express';
 import session from 'express-session';
+import helmet from 'helmet';
 import config from './config/index.js';
 import authRouter from './routes/auth.js';
 import puzzleRouter from './routes/puzzle.js';
 import gameRouter from './routes/game.js';
+import leaderboardRouter from './routes/leaderboard.js';
+import originCheck from './middleware/originCheck.js';
 import { BananaServiceError } from './services/bananaService.js';
 
 const app = express();
@@ -11,8 +14,19 @@ const app = express();
 // Disable x-powered-by header
 app.disable('x-powered-by');
 
+// Helmet adds secure HTTP response headers (e.g., Strict-Transport-Security, X-Content-Type-Options,
+// X-Frame-Options, Origin-Agent-Cluster, etc.) using safe default configurations.
+// Because the backend exclusively serves a JSON API and does not serve HTML documents,
+// no custom Content Security Policy (CSP) directive is configured.
+app.use(helmet());
+
 // Limit JSON request bodies to 10kb
 app.use(express.json({ limit: '10kb' }));
+
+// Reverse proxy configuration note:
+// When deployed in production behind a reverse proxy (e.g., Nginx, Traefik, AWS ALB, Cloudflare),
+// Express must have "trust proxy" configured (e.g., app.set('trust proxy', 1)) for secure cookies
+// to work correctly over HTTPS. Do not enable it now in development.
 
 // Session middleware
 // NOTE: MemoryStore is used for development. It is not suitable for production
@@ -36,6 +50,9 @@ app.use(
 // API router
 const apiRouter = express.Router();
 
+// Apply origin checking middleware on state-changing API requests (defense in depth)
+apiRouter.use(originCheck);
+
 // GET /api/health
 apiRouter.get('/health', (req, res) => {
   res.status(200).json({
@@ -52,6 +69,9 @@ apiRouter.use('/puzzle', puzzleRouter);
 
 // Mount game routes at /api/game
 apiRouter.use('/game', gameRouter);
+
+// Mount leaderboard routes at /api/leaderboard
+apiRouter.use('/leaderboard', leaderboardRouter);
 
 // JSON 404 handler for unmatched API routes
 apiRouter.use((req, res) => {
@@ -88,4 +108,3 @@ const server = app.listen(config.port, () => {
 });
 
 export { app, server };
-export default app;

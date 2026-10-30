@@ -70,6 +70,22 @@
 | `client/src/api/game.js` | AI-assisted (Antigravity) | Client API functions for `getStatus` and `startGame` with HTTP status error attachment | 2026-10-30 |
 | `client/src/components/GameCanvas.jsx` | AI-assisted (Antigravity) | Responsive canvas component mounting Game engine, StrictMode safe, rendering HUD from events | 2026-10-30 |
 | `client/src/pages/GamePage.jsx` | AI-assisted (Antigravity) | Game lobby and active game page handling token availability, Start game action, game over stats, and navigation | 2026-10-30 |
+| `server/package.json` | AI-assisted (Antigravity) | Added `helmet` dependency for secure HTTP headers | 2026-10-30 |
+| `server/config/gameRules.js` | AI-assisted (Antigravity) | Server-side validation constants (`MIN_SPAWN_INTERVAL_MS`, `CATCHES_PER_LEVEL`) and `maxPlausibleScore` upper-bound function | 2026-10-30 |
+| `server/services/scoreService.js` | AI-assisted (Antigravity) | Transactional `finishRun` with plausibility checks, audit logging, and `getLeaderboard` CTE query with tie-breaking | 2026-10-30 |
+| `server/middleware/originCheck.js` | AI-assisted (Antigravity) | Defense-in-depth origin validation middleware for state-changing HTTP requests | 2026-10-30 |
+| `server/controllers/gameController.js` | AI-assisted (Antigravity) | Added `finish` handler validating UUID and mapping outcome results to HTTP statuses | 2026-10-30 |
+| `server/routes/game.js` | AI-assisted (Antigravity) | Added `POST /api/game/finish` with `requireJson` and `gameLimiter`, and added `Cache-Control: no-store` | 2026-10-30 |
+| `server/routes/auth.js` | AI-assisted (Antigravity) | Added `Cache-Control: no-store` header to all authentication responses | 2026-10-30 |
+| `server/controllers/leaderboardController.js` | AI-assisted (Antigravity) | Public leaderboard handler returning top 10 and session user rank with `Cache-Control: no-store` | 2026-10-30 |
+| `server/routes/leaderboard.js` | AI-assisted (Antigravity) | Mounted public `/api/leaderboard` route | 2026-10-30 |
+| `server/app.js` | AI-assisted (Antigravity) | Integrated `helmet()`, `originCheck`, reverse proxy comment, and mounted `/api/leaderboard` | 2026-10-30 |
+| `docs/design/known-limitations.md` | AI-assisted (Antigravity) | Documented known architecture limitations and security boundaries | 2026-10-30 |
+| `server/tests/scoreService.test.js` | AI-assisted (Antigravity) | Automated unit tests for `maxPlausibleScore`, `finishRun` checks, and `getLeaderboard` using in-memory SQLite and clock injection | 2026-10-30 |
+| `client/src/api/game.js` | AI-assisted (Antigravity) | Added `finishGame` submitting only runId and score | 2026-10-30 |
+| `client/src/api/leaderboard.js` | AI-assisted (Antigravity) | Added `getLeaderboard` fetch function | 2026-10-30 |
+| `client/src/pages/GamePage.jsx` | AI-assisted (Antigravity) | Implemented score submission state machine, retry mechanism, and status displays on game over | 2026-10-30 |
+| `client/src/pages/LeaderboardPage.jsx` | AI-assisted (Antigravity) | Leaderboard table UI with top 10, current user highlight, rank outside top 10, and plain text usernames | 2026-10-30 |
 
 > **Note on Assets & Libraries**: No external art, sounds, or third-party game frameworks/libraries are used. The Banana Catch game is built in vanilla JavaScript using the native HTML5 Canvas 2D API, standard Unicode emojis, and browser input/animation primitives.
 

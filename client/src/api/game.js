@@ -36,8 +36,25 @@ export async function startGame() {
   return handleResponse(response);
 }
 
+/**
+ * Concludes a game run, submitting ONLY runId and score.
+ * Never sends duration, level, or client-measured statistics.
+ * @param {string} runId
+ * @param {number} score
+ * @returns {Promise<{ saved: boolean, score: number, alreadySaved?: boolean }>}
+ */
+export async function finishGame(runId, score) {
+  const response = await fetch('/api/game/finish', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ runId, score }),
+    credentials: 'same-origin',
+  });
+  return handleResponse(response);
+}
+
 export default {
   getStatus,
   startGame,
+  finishGame,
 };
-

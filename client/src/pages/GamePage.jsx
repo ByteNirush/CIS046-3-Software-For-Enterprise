@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { getStatus, startGame } from '../api/game.js';
+import { getStatus, startGame, finishGame } from '../api/game.js';
 import GameCanvas from '../components/GameCanvas.jsx';
 
 function GamePage() {
@@ -10,6 +10,14 @@ function GamePage() {
   const [starting, setStarting] = useState(false);
   const [gameOverStats, setGameOverStats] = useState(null);
   const [error, setError] = useState(null);
+
+  // Score submission state machine: null | 'saving' | 'saved' | 'rejected' | 'expired' | 'error'
+  const [submitState, setSubmitState] = useState(null);
+  const [savedScore, setSavedScore] = useState(null);
+
+  const activeRunIdRef = useRef(null);
+  const lastScoreRef = useRef(null);
+  const submittingRef = useRef(false);
 
   // Maps HTTP errors to friendly user messages
   const getErrorMessage = (err) => {
@@ -56,8 +64,13 @@ function GamePage() {
     try {
       setStarting(true);
       setError(null);
+      setSubmitState(null);
+      setSavedScore(null);
+      submittingRef.current = false;
+
       const runData = await startGame();
       setRun(runData);
+      activeRunIdRef.current = runData.runId;
       setGameOverStats(null);
       setTokensAvailable((prev) => Math.max(0, prev - 1));
     } catch (err) {
@@ -70,9 +83,46 @@ function GamePage() {
     }
   };
 
+  const submitScore = async (runId, score) => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitState('saving');
+
+    try {
+      // Submits strictly runId and score (never duration or level)
+      const res = await finishGame(runId, score);
+      setSubmitState('saved');
+      setSavedScore(res.score !== undefined ? res.score : score);
+    } catch (err) {
+      if (err?.status === 422) {
+        setSubmitState('rejected');
+      } else if (err?.status === 410) {
+        setSubmitState('expired');
+      } else {
+        // Network or server communication error
+        setSubmitState('error');
+      }
+    } finally {
+      submittingRef.current = false;
+    }
+  };
+
   const handleGameOver = (stats) => {
     setGameOverStats(stats);
     setRun(null);
+
+    const runId = activeRunIdRef.current;
+    lastScoreRef.current = stats.score;
+
+    if (runId) {
+      submitScore(runId, stats.score);
+    }
+  };
+
+  const handleRetrySubmit = () => {
+    if (activeRunIdRef.current && lastScoreRef.current !== null) {
+      submitScore(activeRunIdRef.current, lastScoreRef.current);
+    }
   };
 
   if (loading) {
@@ -92,7 +142,7 @@ function GamePage() {
     );
   }
 
-  // Game over state
+  // Game over state with score submission state machine
   if (gameOverStats) {
     const timeFormatted = (gameOverStats.durationMs / 1000).toFixed(1);
     return (
@@ -118,9 +168,60 @@ function GamePage() {
           </p>
         </div>
 
-        <p style={{ fontStyle: 'italic', color: '#666', margin: '1rem 0' }}>
-          Score saving arrives in the next step
-        </p>
+        {/* Score Submission Status Display */}
+        <div style={{ margin: '1.5rem 0' }}>
+          {submitState === 'saving' && (
+            <p style={{ color: '#1976d2', fontWeight: 'bold' }}>Saving score...</p>
+          )}
+
+          {submitState === 'saved' && (
+            <div>
+              <p style={{ color: '#2e7d32', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                Score saved: {savedScore}
+              </p>
+              <Link
+                to="/leaderboard"
+                style={{
+                  display: 'inline-block',
+                  marginTop: '0.5rem',
+                  color: '#1976d2',
+                  textDecoration: 'underline',
+                }}
+              >
+                View Leaderboard
+              </Link>
+            </div>
+          )}
+
+          {submitState === 'rejected' && (
+            <p style={{ color: '#c62828', fontWeight: 'bold' }}>Score was rejected</p>
+          )}
+
+          {submitState === 'expired' && (
+            <p style={{ color: '#c62828', fontWeight: 'bold' }}>Run expired</p>
+          )}
+
+          {submitState === 'error' && (
+            <div>
+              <p style={{ color: '#c62828', fontWeight: 'bold' }}>Could not reach the server</p>
+              <button
+                type="button"
+                onClick={handleRetrySubmit}
+                style={{
+                  padding: '0.4rem 1rem',
+                  marginTop: '0.5rem',
+                  backgroundColor: '#ff9800',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          )}
+        </div>
 
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
           <Link
