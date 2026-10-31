@@ -55,54 +55,97 @@ function LeaderboardPage() {
   const isMeInTopTen = me && leaderboard.some((entry) => entry.rank === me.rank);
 
   return (
-    <div style={{ maxWidth: '650px', margin: '2rem auto', textAlign: 'center' }}>
-      <h1>Banana Arcade Leaderboard</h1>
+    <div className="leaderboard-container">
+      <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+        <div className="badge badge-amber" style={{ marginBottom: '0.5rem' }}>
+          <span>🏆</span>
+          <span>Hall of Fame</span>
+        </div>
+        <h1>Arcade Leaderboard</h1>
+        <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.95rem' }}>
+          Real-time top rankings verified by the arcade anti-cheat engine.
+        </p>
+      </div>
 
-      {loading && <p>Loading leaderboard...</p>}
+      {/* Personal Rank Highlight Card (if logged in and has recorded score) */}
+      {me && (
+        <div
+          className="card"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '1rem 1.5rem',
+            marginBottom: '1.5rem',
+            backgroundColor: 'var(--primary-subtle)',
+            borderColor: '#fde68a',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <span style={{ fontSize: '1.5rem' }} aria-hidden="true">🎖️</span>
+            <div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--primary-text)', fontWeight: 600, textTransform: 'uppercase' }}>
+                Your Record
+              </div>
+              <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '1.1rem' }}>
+                {user?.username || 'You'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+            <div>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Score: </span>
+              <strong style={{ fontSize: '1.1rem' }} className="tabular-nums">{me.bestScore}</strong>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rank: </span>
+              <span className="badge badge-amber" style={{ fontSize: '0.85rem' }}>
+                #{me.rank}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {loading && (
+        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+          <p style={{ color: 'var(--text-muted)' }}>Fetching top players...</p>
+        </div>
+      )}
 
       {error && (
-        <div style={{ margin: '1.5rem 0' }}>
-          <p style={{ color: '#c62828', marginBottom: '0.75rem' }}>{error}</p>
+        <div className="alert alert-error" style={{ display: 'block', textAlign: 'center', padding: '1.5rem' }}>
+          <p style={{ fontWeight: 600, marginBottom: '0.75rem' }}>{error}</p>
           <button
             type="button"
+            className="btn btn-secondary btn-sm"
             onClick={() => fetchScores()}
-            style={{
-              padding: '0.4rem 1rem',
-              backgroundColor: '#1976d2',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
           >
-            Retry
+            Retry Loading
           </button>
         </div>
       )}
 
       {!loading && !error && leaderboard.length === 0 && (
-        <p style={{ margin: '2rem 0', color: '#666', fontSize: '1.1rem' }}>
-          No scores yet. Be the first!
-        </p>
+        <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🍌</div>
+          <h3>No scores on the board yet</h3>
+          <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+            Be the pioneer! Solve a puzzle and set the first record on the leaderboard.
+          </p>
+        </div>
       )}
 
       {!loading && !error && leaderboard.length > 0 && (
-        <div style={{ marginTop: '1.5rem' }}>
-          <table
-            style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              margin: '0 auto',
-              textAlign: 'left',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            }}
-          >
+        <div className="table-responsive">
+          <table className="leaderboard-table">
             <thead>
-              <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
-                <th style={{ padding: '0.75rem 1rem' }}>Rank</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Player</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Best Score</th>
-                <th style={{ padding: '0.75rem 1rem' }}>Date</th>
+              <tr>
+                <th style={{ width: '80px', textAlign: 'center' }}>Rank</th>
+                <th>Player</th>
+                <th style={{ textAlign: 'right' }}>Best Score</th>
+                <th style={{ textAlign: 'right', width: '130px' }}>Date</th>
               </tr>
             </thead>
             <tbody>
@@ -114,24 +157,34 @@ function LeaderboardPage() {
                 return (
                   <tr
                     key={entry.rank}
-                    style={{
-                      borderBottom: '1px solid #eee',
-                      backgroundColor: isCurrent ? '#fff9c4' : 'transparent',
-                      fontWeight: isCurrent ? 'bold' : 'normal',
-                    }}
+                    className={isCurrent ? 'user-row' : ''}
                   >
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      {entry.rank === 1 && '🥇 '}
-                      {entry.rank === 2 && '🥈 '}
-                      {entry.rank === 3 && '🥉 '}
-                      {entry.rank}
+                    <td style={{ textAlign: 'center' }}>
+                      {entry.rank === 1 ? (
+                        <span className="rank-badge rank-1" title="First Place">1</span>
+                      ) : entry.rank === 2 ? (
+                        <span className="rank-badge rank-2" title="Second Place">2</span>
+                      ) : entry.rank === 3 ? (
+                        <span className="rank-badge rank-3" title="Third Place">3</span>
+                      ) : (
+                        <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>{entry.rank}</span>
+                      )}
                     </td>
-                    {/* Rendered as plain text to prevent HTML injection */}
-                    <td style={{ padding: '0.75rem 1rem' }}>
-                      {entry.username} {isCurrent && '(You)'}
+                    <td>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span>{entry.username}</span>
+                        {isCurrent && (
+                          <span className="badge badge-amber" style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem' }}>
+                            You
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td style={{ padding: '0.75rem 1rem' }}>{entry.bestScore}</td>
-                    <td style={{ padding: '0.75rem 1rem', color: '#666', fontSize: '0.9rem' }}>
+                    <td style={{ textAlign: 'right', fontWeight: 700 }} className="tabular-nums">
+                      <span style={{ color: 'var(--primary)' }}>★ </span>
+                      {entry.bestScore}
+                    </td>
+                    <td style={{ textAlign: 'right', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                       {formatDate(entry.achievedAt)}
                     </td>
                   </tr>
@@ -139,21 +192,6 @@ function LeaderboardPage() {
               })}
             </tbody>
           </table>
-
-          {/* Show personal rank if logged in and not in the top 10 */}
-          {me && !isMeInTopTen && (
-            <div
-              style={{
-                marginTop: '1.5rem',
-                padding: '0.75rem 1rem',
-                backgroundColor: '#e3f2fd',
-                borderRadius: '6px',
-                display: 'inline-block',
-              }}
-            >
-              Your best: <strong>{me.bestScore}</strong> (rank {me.rank})
-            </div>
-          )}
         </div>
       )}
     </div>

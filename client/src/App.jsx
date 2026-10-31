@@ -10,9 +10,9 @@ import LeaderboardPage from './pages/LeaderboardPage.jsx';
 
 function App() {
   return (
-    <div>
+    <div className="app-wrapper">
       <NavBar />
-      <main style={{ padding: '1rem' }}>
+      <main className="app-main">
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
