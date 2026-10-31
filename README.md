@@ -230,9 +230,10 @@ All state-changing endpoints (`POST`) are protected by `originCheck`. All authen
 | `GET` | `/api/auth/me` | **Yes** (`requireLogin`) | None | *None* | `200 OK`<br>`{"user": {"id": 1, "username": "alice"}}` | `401` Not logged in |
 | `POST` | `/api/puzzle/new` | **Yes** (`requireLogin`) | `puzzleLimiter`<br>(20 req / 10m) | *None* | `201 Created`<br>`{"id": "<UUID>", "image": "<base64>", "expiresAt": "<ISO>", "maxAttempts": 3}` | `401` Not logged in<br>`429` Too many puzzles<br>`502` Puzzle service unavailable |
 | `POST` | `/api/puzzle/:id/answer` | **Yes** (`requireLogin`) | None *(max 3 attempts)* | `{"guess": "<single digit 0-9>"}` | `200 OK`<br>- Correct: `{"correct": true, "unlocked": true}`<br>- Wrong: `{"correct": false, "attemptsLeft": N}`<br>- Failed: `{"correct": false, "attemptsLeft": 0, "failed": true}` | `400` Not a single digit<br>`401` Not logged in<br>`404` Puzzle not found<br>`409` Not active<br>`410` Expired |
-| `GET` | `/api/game/status` | **Yes** (`requireLogin`) | None | *None* | `200 OK`<br>`{"tokensAvailable": <number>}` | `401` Not logged in |
+| `GET` | `/api/game/status` | **Yes** (`requireLogin`) | None | *None* | `200 OK`<br>`{"tokensAvailable": <int>, "personalBest": <int>, "totalGames": <int>, "rank": <int\|null>, "recentRuns": [...], "activeRun": {...} \| null}` | `401` Not logged in |
 | `POST` | `/api/game/start` | **Yes** (`requireLogin`) | `gameLimiter`<br>(10 req / 1m) | `{}` | `201 Created`<br>`{"runId": "<UUID>", "startedAt": "<ISO>"}` | `401` Not logged in<br>`403` No tokens available<br>`429` Too many requests |
 | `POST` | `/api/game/finish` | **Yes** (`requireLogin`) | `gameLimiter`<br>(10 req / 1m) | `{"runId": "<UUID>", "score": <int>}` | `200 OK`<br>- Saved: `{"saved": true, "score": 15}`<br>- Duplicate: `{"saved": true, "score": 15, "alreadySaved": true}` | `400` Invalid UUID/score<br>`401` Not logged in<br>`404` Not found<br>`409` Not active<br>`410` Expired<br>`422` Score rejected |
+| `POST` | `/api/game/abandon` | **Yes** (`requireLogin`) | `gameLimiter`<br>(10 req / 1m) | `{"runId": "<UUID>"}` | `200 OK`<br>`{"abandoned": true}` | `400` Invalid UUID<br>`401` Not logged in |
 | `GET` | `/api/leaderboard` | No (Public) | None | *None* | `200 OK`<br>`{"leaderboard": [{"rank": 1, "username": "alice", "bestScore": 25, "achievedAt": "..."}], "me": {"rank": 3, "bestScore": 15} \| null}` | `500` Internal Server Error |
 | `ALL` | `/api/*` | No | None | *Any* | *None* | `404 Not Found` |
 
@@ -322,32 +323,34 @@ All state-changing endpoints (`POST`) are protected by `originCheck`. All authen
 | `server/middleware/originCheck.js` | AI-assisted (Antigravity) | Origin validation middleware for mutating requests as defense-in-depth | 2026-10-30 |
 | `server/controllers/authController.js` | AI-assisted (Antigravity) | Handlers for user signup (bcrypt cost 12), login (dummy hash timing mitigation), logout, and getMe | 2026-10-29 |
 | `server/controllers/puzzleController.js` | AI-assisted (Antigravity) | HTTP controllers mapping puzzle service results to 201, 200, 400, 404, 409, 410 statuses | 2026-10-30 |
-| `server/controllers/gameController.js` | AI-assisted (Antigravity) | Handlers for `getStatus`, `start` (spending token), and `finish` (validating score) | 2026-10-30 |
+| `server/controllers/gameController.js` | AI-assisted (Antigravity) | Handlers for `getStatus` (enriched with player stats), `start` (spending token), `finish` (validating score), and `abandon` | 2026-10-31 |
 | `server/controllers/leaderboardController.js` | AI-assisted (Antigravity) | Public leaderboard handler returning top 10 and session user rank with `Cache-Control: no-store` | 2026-10-30 |
 | `server/routes/*` | AI-assisted (Antigravity) | Express routers mounted at `/api/auth`, `/api/puzzle`, `/api/game`, `/api/leaderboard` | 2026-10-29 |
 | `server/services/bananaService.js` | AI-assisted (Antigravity) | Banana API integration with built-in fetch, AbortController timeout, validation, and generic `BananaServiceError` | 2026-10-30 |
 | `server/services/puzzleService.js` | AI-assisted (Antigravity) | Puzzle lifecycle management (`createPuzzle`, transactional `checkAnswer`, `cleanupOldPuzzles`) | 2026-10-30 |
 | `server/services/tokenService.js` | AI-assisted (Antigravity) | Play token lifecycle (`createTokenForPuzzle`, `expireStaleTokens`, `countAvailable`, atomic `startRun`) | 2026-10-30 |
-| `server/services/scoreService.js` | AI-assisted (Antigravity) | Transactional `finishRun` with plausibility checks and `getLeaderboard` CTE query with tie-breaking | 2026-10-30 |
+| `server/services/scoreService.js` | AI-assisted (Antigravity) | Transactional `finishRun` with plausibility checks, `getUserGameProfile`, `abandonRun`, and `getLeaderboard` CTE query with tie-breaking | 2026-10-31 |
 | `server/app.js` | AI-assisted (Antigravity) | Express app setup with `express-session`, `helmet`, `originCheck`, and centralized error handling | 2026-10-29 |
-| `server/tests/*` | AI-assisted (Antigravity) | Automated unit tests covering `puzzleService`, `tokenService`, and `scoreService` using in-memory SQLite | 2026-10-30 |
+| `server/tests/*` | AI-assisted (Antigravity) | Automated unit tests covering `puzzleService`, `tokenService`, and `scoreService` (28 tests) using in-memory SQLite | 2026-10-31 |
 | `client/package.json` | AI-assisted (Antigravity) | Client scripts (`dev`, `build`, `test`), dependencies (`react`, `react-dom`, `react-router-dom`, `vite`) | 2026-10-29 |
 | `client/vite.config.js` | AI-assisted (Antigravity) | Vite build tool configuration with React plugin and development `/api` proxy | 2026-10-30 |
 | `client/css/style.css` | Student implementation | Base CSS stylesheet with cross-browser resets and typography | 2026-10-30 |
 | `client/src/api/client.js` | AI-assisted (Antigravity) | Standardized API client helper for fetch, credentials, headers, and error handling | 2026-10-31 |
-| `client/src/api/*` | AI-assisted (Antigravity) | Client fetch functions for `auth.js`, `puzzle.js`, `game.js`, `leaderboard.js` using `apiFetch` | 2026-10-29 |
+| `client/src/api/*` | AI-assisted (Antigravity) | Client fetch functions for `auth.js`, `puzzle.js`, `game.js`, `leaderboard.js` using `apiFetch` | 2026-10-31 |
 | `client/src/context/AuthContext.jsx` | AI-assisted (Antigravity) | React Context managing user authentication state and session hydration on initial load | 2026-10-29 |
 | `client/src/hooks/useAuth.js` | AI-assisted (Antigravity) | React hook providing access to `AuthContext` | 2026-10-29 |
 | `client/src/utils/validation.js` | AI-assisted (Antigravity) | Shared client-side authentication credential validation | 2026-10-31 |
 | `client/src/events/emitter.js` | AI-assisted (Antigravity) | Lightweight custom `EventEmitter` class with `on`, `off`, `emit`, and unsubscribe cleanup function | 2026-10-30 |
 | `client/src/game/config.js` | AI-assisted (Antigravity) | Game configuration constants (dimensions, speeds, intervals, lives, frame caps, collision sizes) | 2026-10-30 |
 | `client/src/game/collision.js` | AI-assisted (Antigravity) | Pure function `rectsOverlap` for 2D axis-aligned bounding box collision detection | 2026-10-30 |
-| `client/src/game/input.js` | AI-assisted (Antigravity) | Input controller tracking keyboard (Arrows, A/D) and pointer/touch canvas drag with listener cleanup | 2026-10-30 |
-| `client/src/game/entities.js` | AI-assisted (Antigravity) | Plain JS entity classes for `Basket` and `FallingItem` with bounds and physics updates | 2026-10-30 |
-| `client/src/game/Game.js` | AI-assisted (Antigravity) | Plain JavaScript game engine running requestAnimationFrame loop, delta time capping, visibility pauses, event emissions, and canvas rendering (no external art, sounds, or game libraries) | 2026-10-30 |
-| `client/src/components/*` | AI-assisted (Antigravity) | React components (`NavBar`, `ProtectedRoute`, `GameCanvas`) | 2026-10-29 |
-| `client/src/pages/*` | AI-assisted (Antigravity) | Route pages (`LandingPage`, `LoginPage`, `SignupPage`, `PuzzlePage` with 0-9 number pad, `GamePage`, `LeaderboardPage`) | 2026-10-29 |
-| `client/tests/*` | AI-assisted (Antigravity) | Unit tests verifying collision detection (`collision.test.js`), event emission (`emitter.test.js`), and credential validation (`validation.test.js`) | 2026-10-31 |
+| `client/src/game/input.js` | AI-assisted (Antigravity) | Input controller tracking keyboard (Arrows, A/D, P/Esc), touch drag, and virtual buttons | 2026-10-31 |
+| `client/src/game/entities.js` | AI-assisted (Antigravity) | Plain JS entity classes for `Basket` (with catch bounds) and `FallingItem` (with wobble and rotation) | 2026-10-31 |
+| `client/src/game/audio.js` | AI-assisted (Antigravity) | Web Audio API procedural retro 8-bit sound effects synthesizer (no external audio files needed) | 2026-10-31 |
+| `client/src/game/particles.js` | AI-assisted (Antigravity) | Lightweight 2D canvas particle burst and floating text engine | 2026-10-31 |
+| `client/src/game/Game.js` | AI-assisted (Antigravity) | Plain JavaScript game engine running requestAnimationFrame loop, power-ups, countdown, screen shake, audio, and canvas rendering | 2026-10-31 |
+| `client/src/components/*` | AI-assisted (Antigravity) | React components (`NavBar`, `ProtectedRoute`, `GameCanvas` with HUD, sound toggle & touch buttons) | 2026-10-31 |
+| `client/src/pages/*` | AI-assisted (Antigravity) | Route pages (`LandingPage`, `LoginPage`, `SignupPage`, `PuzzlePage`, `GamePage` with stats, practice mode & recovery, `LeaderboardPage`) | 2026-10-31 |
+| `client/tests/*` | AI-assisted (Antigravity) | Unit tests verifying collision detection (`collision.test.js`), event emission (`emitter.test.js`), credential validation (`validation.test.js`), and particle physics (`particles.test.js`) (21 tests) | 2026-10-31 |
 
 > **AI Assistance Statement**: AI assistance (Antigravity) was used iteratively during the development of Banana Arcade to assist with structuring boilerplate scaffolding, drafting configuration validators, implementing mathematical boundary algorithms (`maxPlausibleScore`), formatting SQLite Common Table Expression (CTE) leaderboard queries, deduplicating client API utilities, and generating unit test assertions. All AI-suggested code was reviewed, verified against project requirements, tested locally, and adapted to conform strictly to assignment constraints.
 

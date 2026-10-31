@@ -15,49 +15,49 @@ TAP version 13
     # Subtest: correct answer returns { correct: true } and marks puzzle solved
     ok 1 - correct answer returns { correct: true } and marks puzzle solved
       ---
-      duration_ms: 4.405125
+      duration_ms: 3.466541
       ...
     # Subtest: wrong answer decrements attempts and returns { correct: false, attemptsLeft }
     ok 2 - wrong answer decrements attempts and returns { correct: false, attemptsLeft }
       ---
-      duration_ms: 0.895959
+      duration_ms: 0.836167
       ...
     # Subtest: failure after reaching max attempts (3 wrong guesses)
     ok 3 - failure after reaching max attempts (3 wrong guesses)
       ---
-      duration_ms: 0.793708
+      duration_ms: 0.806166
       ...
     # Subtest: expired puzzle returns { status: "expired" } and updates database status
     ok 4 - expired puzzle returns { status: "expired" } and updates database status
       ---
-      duration_ms: 0.586792
+      duration_ms: 0.59075
       ...
     # Subtest: puzzle belonging to another user returns not found (no existence leak)
     ok 5 - puzzle belonging to another user returns not found (no existence leak)
       ---
-      duration_ms: 0.744334
+      duration_ms: 0.712
       ...
     # Subtest: solved puzzle cannot be answered again and returns { status: "not_active" }
     ok 6 - solved puzzle cannot be answered again and returns { status: "not_active" }
       ---
-      duration_ms: 0.816042
+      duration_ms: 0.753208
       ...
     # Subtest: cleanupOldPuzzles
         # Subtest: deletes failed and expired puzzles older than 1 hour, but preserves solved and pending puzzles
         ok 1 - deletes failed and expired puzzles older than 1 hour, but preserves solved and pending puzzles
           ---
-          duration_ms: 0.93125
+          duration_ms: 0.851708
           ...
         1..1
     ok 7 - cleanupOldPuzzles
       ---
-      duration_ms: 1.130209
+      duration_ms: 1.039459
       type: 'suite'
       ...
     1..7
 ok 1 - puzzleService.checkAnswer
   ---
-  duration_ms: 10.617791
+  duration_ms: 9.33025
   type: 'suite'
   ...
 # [Audit] Category: implausible score, User ID: 1, Elapsed Time: 1000ms
@@ -69,130 +69,164 @@ ok 1 - puzzleService.checkAnswer
         # Subtest: calculates plausible score upper bounds correctly across time intervals
         ok 1 - calculates plausible score upper bounds correctly across time intervals
           ---
-          duration_ms: 1.741208
+          duration_ms: 1.211042
           ...
         1..1
     ok 1 - maxPlausibleScore boundaries
       ---
-      duration_ms: 2.149833
+      duration_ms: 1.742959
       type: 'suite'
       ...
     # Subtest: finishRun validation and persistence
         # Subtest: finishRun saves a plausible score
         ok 1 - finishRun saves a plausible score
           ---
-          duration_ms: 2.436667
+          duration_ms: 2.381167
           ...
         # Subtest: rejects a score above the bound and voids the run
         ok 2 - rejects a score above the bound and voids the run
           ---
-          duration_ms: 1.578667
+          duration_ms: 1.541208
           ...
         # Subtest: rejects negative, fractional and non-numeric scores
         ok 3 - rejects negative, fractional and non-numeric scores
           ---
-          duration_ms: 1.167834
+          duration_ms: 1.289042
           ...
         # Subtest: returns alreadySaved when finishing twice (and the stored score is unchanged by a second, different score)
         ok 4 - returns alreadySaved when finishing twice (and the stored score is unchanged by a second, different score)
           ---
-          duration_ms: 0.709625
+          duration_ms: 0.784
           ...
         # Subtest: returns notFound for another user's run
         ok 5 - returns notFound for another user's run
           ---
-          duration_ms: 0.6515
+          duration_ms: 0.656709
           ...
         # Subtest: returns notActive for an 'unused' token
         ok 6 - returns notActive for an 'unused' token
           ---
-          duration_ms: 0.81275
+          duration_ms: 0.727
           ...
         # Subtest: returns expired for a run older than RUN_MAX_SECONDS
         ok 7 - returns expired for a run older than RUN_MAX_SECONDS
           ---
-          duration_ms: 0.57275
+          duration_ms: 0.56075
           ...
         1..7
     ok 2 - finishRun validation and persistence
       ---
-      duration_ms: 8.386584
+      duration_ms: 8.250667
       type: 'suite'
       ...
     # Subtest: getLeaderboard querying and ranking
         # Subtest: uses best score per user, orders correctly, breaks ties by earlier achievement, never includes user ids, and returns the right rank for me
         ok 1 - uses best score per user, orders correctly, breaks ties by earlier achievement, never includes user ids, and returns the right rank for me
           ---
-          duration_ms: 1.520291
+          duration_ms: 1.552209
           ...
         1..1
     ok 3 - getLeaderboard querying and ranking
       ---
-      duration_ms: 1.609792
+      duration_ms: 1.651459
       type: 'suite'
       ...
-    1..3
+    # Subtest: getUserGameProfile arcade statistics
+        # Subtest: returns personal best, games count, and recent runs correctly
+        ok 1 - returns personal best, games count, and recent runs correctly
+          ---
+          duration_ms: 1.814333
+          ...
+        # Subtest: returns zeroed defaults for a user with no games
+        ok 2 - returns zeroed defaults for a user with no games
+          ---
+          duration_ms: 0.862666
+          ...
+        1..2
+    ok 4 - getUserGameProfile arcade statistics
+      ---
+      duration_ms: 2.787375
+      type: 'suite'
+      ...
+    # Subtest: abandonRun active session forfeiture
+        # Subtest: cancels an active started run by marking it expired
+        ok 1 - cancels an active started run by marking it expired
+          ---
+          duration_ms: 0.693542
+          ...
+        # Subtest: refuses to abandon runs belonging to other users or already finished
+        ok 2 - refuses to abandon runs belonging to other users or already finished
+          ---
+          duration_ms: 0.4835
+          ...
+        1..2
+    ok 5 - abandonRun active session forfeiture
+      ---
+      duration_ms: 1.249583
+      type: 'suite'
+      ...
+    1..5
 ok 2 - Score Service & Leaderboard (scoreService)
   ---
-  duration_ms: 12.945458
+  duration_ms: 16.411375
   type: 'suite'
   ...
 # Subtest: Play Tokens and Game Runs (tokenService)
     # Subtest: a correct answer creates exactly one token
     ok 1 - a correct answer creates exactly one token
       ---
-      duration_ms: 3.5555
+      duration_ms: 3.474458
       ...
     # Subtest: a wrong answer creates none
     ok 2 - a wrong answer creates none
       ---
-      duration_ms: 1.042375
+      duration_ms: 0.955458
       ...
     # Subtest: startRun spends the oldest unused token
     ok 3 - startRun spends the oldest unused token
       ---
-      duration_ms: 1.036958
+      duration_ms: 0.968583
       ...
     # Subtest: a second startRun with no tokens returns null
     ok 4 - a second startRun with no tokens returns null
       ---
-      duration_ms: 0.757041
+      duration_ms: 0.656834
       ...
     # Subtest: an expired token cannot be started
     ok 5 - an expired token cannot be started
       ---
-      duration_ms: 0.812542
+      duration_ms: 0.685667
       ...
     # Subtest: a token of another user cannot be used
     ok 6 - a token of another user cannot be used
       ---
-      duration_ms: 0.818375
+      duration_ms: 0.71525
       ...
     # Subtest: two quick startRun calls with one token only succeed once
     ok 7 - two quick startRun calls with one token only succeed once
       ---
-      duration_ms: 0.79675
+      duration_ms: 0.75025
       ...
     # Subtest: a started token older than RUN_MAX_SECONDS counts as expired
     ok 8 - a started token older than RUN_MAX_SECONDS counts as expired
       ---
-      duration_ms: 0.605083
+      duration_ms: 0.594083
       ...
     1..8
 ok 3 - Play Tokens and Game Runs (tokenService)
   ---
-  duration_ms: 10.790291
+  duration_ms: 9.827958
   type: 'suite'
   ...
 1..3
-# tests 24
-# suites 7
-# pass 24
+# tests 28
+# suites 9
+# pass 28
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 155.466792
+# duration_ms 149.335792
 
 > banana-clash@1.0.0 test:client
 > npm --prefix client test
@@ -206,74 +240,96 @@ TAP version 13
     # Subtest: returns true when rectangles overlap completely or partially
     ok 1 - returns true when rectangles overlap completely or partially
       ---
-      duration_ms: 0.91525
+      duration_ms: 0.798709
       ...
     # Subtest: returns false when rectangles are horizontally separated
     ok 2 - returns false when rectangles are horizontally separated
       ---
-      duration_ms: 0.1225
+      duration_ms: 0.112375
       ...
     # Subtest: returns false when rectangles are vertically separated
     ok 3 - returns false when rectangles are vertically separated
       ---
-      duration_ms: 0.094875
+      duration_ms: 0.088125
       ...
     # Subtest: returns false when rectangles only touch edges without overlapping
     ok 4 - returns false when rectangles only touch edges without overlapping
       ---
-      duration_ms: 0.791625
+      duration_ms: 0.76525
       ...
     # Subtest: handles corner overlap
     ok 5 - handles corner overlap
       ---
-      duration_ms: 0.167416
+      duration_ms: 0.226375
       ...
     # Subtest: returns false for null or undefined bounding boxes
     ok 6 - returns false for null or undefined bounding boxes
       ---
-      duration_ms: 0.077083
+      duration_ms: 0.086042
       ...
     1..6
 ok 1 - rectsOverlap collision detection
   ---
-  duration_ms: 3.38225
+  duration_ms: 3.331
   type: 'suite'
   ...
 # Subtest: EventEmitter
     # Subtest: registers handlers and receives emitted events with payloads
     ok 1 - registers handlers and receives emitted events with payloads
       ---
-      duration_ms: 1.153166
+      duration_ms: 1.186667
       ...
     # Subtest: unsubscribes using the returned cleanup function
     ok 2 - unsubscribes using the returned cleanup function
       ---
-      duration_ms: 0.148667
+      duration_ms: 0.169209
       ...
     # Subtest: unsubscribes using off(event, handler)
     ok 3 - unsubscribes using off(event, handler)
       ---
-      duration_ms: 0.105125
+      duration_ms: 0.105042
       ...
     # Subtest: supports multiple listeners for the same event independently
     ok 4 - supports multiple listeners for the same event independently
       ---
-      duration_ms: 0.755875
+      duration_ms: 0.856916
       ...
     # Subtest: handles emitting events with no listeners without throwing
     ok 5 - handles emitting events with no listeners without throwing
       ---
-      duration_ms: 0.267458
+      duration_ms: 0.240084
       ...
     # Subtest: handles safe unsubscription during emission
     ok 6 - handles safe unsubscription during emission
       ---
-      duration_ms: 0.127625
+      duration_ms: 0.118292
       ...
     1..6
 ok 2 - EventEmitter
   ---
-  duration_ms: 3.635792
+  duration_ms: 3.831958
+  type: 'suite'
+  ...
+# Subtest: EffectSystem and Particle Physics (particles.js)
+    # Subtest: updates particle position and detects expiration
+    ok 1 - updates particle position and detects expiration
+      ---
+      duration_ms: 0.765875
+      ...
+    # Subtest: updates floating text position upwards and expires
+    ok 2 - updates floating text position upwards and expires
+      ---
+      duration_ms: 0.288417
+      ...
+    # Subtest: manages burst particles and floating text inside EffectSystem lifecycle
+    ok 3 - manages burst particles and floating text inside EffectSystem lifecycle
+      ---
+      duration_ms: 0.383875
+      ...
+    1..3
+ok 3 - EffectSystem and Particle Physics (particles.js)
+  ---
+  duration_ms: 2.467625
   type: 'suite'
   ...
 # Subtest: validateAuthCredentials
@@ -281,58 +337,58 @@ ok 2 - EventEmitter
         # Subtest: matches valid alphanumeric usernames and underscores between 3 and 20 chars
         ok 1 - matches valid alphanumeric usernames and underscores between 3 and 20 chars
           ---
-          duration_ms: 0.692208
+          duration_ms: 0.700583
           ...
         # Subtest: rejects usernames that are too short or too long
         ok 2 - rejects usernames that are too short or too long
           ---
-          duration_ms: 0.875166
+          duration_ms: 0.912625
           ...
         # Subtest: rejects usernames with invalid characters or spaces
         ok 3 - rejects usernames with invalid characters or spaces
           ---
-          duration_ms: 0.105083
+          duration_ms: 0.206666
           ...
         1..3
     ok 1 - USERNAME_REGEX
       ---
-      duration_ms: 2.140416
+      duration_ms: 2.353125
       type: 'suite'
       ...
     # Subtest: validateAuthCredentials function
         # Subtest: returns null for valid credentials
         ok 1 - returns null for valid credentials
           ---
-          duration_ms: 0.136583
+          duration_ms: 0.170209
           ...
         # Subtest: returns appropriate error for invalid usernames
         ok 2 - returns appropriate error for invalid usernames
           ---
-          duration_ms: 0.087708
+          duration_ms: 0.1015
           ...
         # Subtest: returns appropriate error for invalid passwords
         ok 3 - returns appropriate error for invalid passwords
           ---
-          duration_ms: 0.090291
+          duration_ms: 0.09725
           ...
         1..3
     ok 2 - validateAuthCredentials function
       ---
-      duration_ms: 0.528875
+      duration_ms: 0.613666
       type: 'suite'
       ...
     1..2
-ok 3 - validateAuthCredentials
+ok 4 - validateAuthCredentials
   ---
-  duration_ms: 3.634791
+  duration_ms: 3.897125
   type: 'suite'
   ...
-1..3
-# tests 18
-# suites 5
-# pass 18
+1..4
+# tests 21
+# suites 6
+# pass 21
 # fail 0
 # cancelled 0
 # skipped 0
 # todo 0
-# duration_ms 121.768875
+# duration_ms 128.614625
