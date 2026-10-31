@@ -4,7 +4,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createPuzzle, checkAnswer } from '../services/puzzleService.js';
+import { createPuzzle, checkAnswer, cleanupOldPuzzles } from '../services/puzzleService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -140,6 +140,64 @@ describe('puzzleService.checkAnswer', () => {
     // Attempting to answer again
     const secondRes = checkAnswer(1, puzzle.id, '9', memDb);
     assert.deepStrictEqual(secondRes, { status: 'not_active' });
+  });
+
+  describe('cleanupOldPuzzles', () => {
+    it('deletes failed and expired puzzles older than 1 hour, but preserves solved and pending puzzles', () => {
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+      const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const futureExpiry = new Date(Date.now() + 60 * 1000).toISOString();
+
+      // Seed old failed puzzle (should be deleted)
+      memDb.prepare(
+        "INSERT INTO puzzles (id, user_id, solution, image, attempts, status, created_at, expires_at) VALUES ('p-old-failed', 1, '1', 'img', 3, 'failed', ?, ?)"
+      ).run(twoHoursAgo, twoHoursAgo);
+
+      // Seed old expired puzzle (should be deleted)
+      memDb.prepare(
+        "INSERT INTO puzzles (id, user_id, solution, image, attempts, status, created_at, expires_at) VALUES ('p-old-expired', 1, '2', 'img', 0, 'expired', ?, ?)"
+      ).run(twoHoursAgo, twoHoursAgo);
+
+      // Seed recent failed puzzle (should NOT be deleted because < 1 hour)
+      memDb.prepare(
+        "INSERT INTO puzzles (id, user_id, solution, image, attempts, status, created_at, expires_at) VALUES ('p-recent-failed', 1, '3', 'img', 3, 'failed', ?, ?)"
+      ).run(thirtyMinsAgo, thirtyMinsAgo);
+
+      // Seed old pending puzzle (should NOT be deleted because status is pending)
+      memDb.prepare(
+        "INSERT INTO puzzles (id, user_id, solution, image, attempts, status, created_at, expires_at) VALUES ('p-old-pending', 1, '4', 'img', 0, 'pending', ?, ?)"
+      ).run(twoHoursAgo, futureExpiry);
+
+      // Seed old solved puzzle with associated play token (must NEVER be deleted to protect leaderboard)
+      memDb.prepare(
+        "INSERT INTO puzzles (id, user_id, solution, image, attempts, status, created_at, expires_at) VALUES ('p-old-solved', 1, '5', 'img', 1, 'solved', ?, ?)"
+      ).run(twoHoursAgo, twoHoursAgo);
+
+      memDb.prepare(
+        "INSERT INTO play_tokens (id, user_id, puzzle_id, status, created_at, expires_at, started_at, finished_at, score) VALUES ('tok-solved', 1, 'p-old-solved', 'finished', ?, ?, ?, ?, 42)"
+      ).run(twoHoursAgo, twoHoursAgo, twoHoursAgo, twoHoursAgo);
+
+      // Run cleanup
+      cleanupOldPuzzles(memDb);
+
+      // Assert old failed and old expired were removed
+      const oldFailed = memDb.prepare('SELECT id FROM puzzles WHERE id = ?').get('p-old-failed');
+      const oldExpired = memDb.prepare('SELECT id FROM puzzles WHERE id = ?').get('p-old-expired');
+      assert.strictEqual(oldFailed, undefined);
+      assert.strictEqual(oldExpired, undefined);
+
+      // Assert recent failed, pending, and solved puzzles are preserved
+      const recentFailed = memDb.prepare('SELECT id FROM puzzles WHERE id = ?').get('p-recent-failed');
+      const oldPending = memDb.prepare('SELECT id FROM puzzles WHERE id = ?').get('p-old-pending');
+      const oldSolved = memDb.prepare('SELECT id FROM puzzles WHERE id = ?').get('p-old-solved');
+      const token = memDb.prepare('SELECT id, score FROM play_tokens WHERE id = ?').get('tok-solved');
+
+      assert.ok(recentFailed, 'Recent failed puzzles should be kept');
+      assert.ok(oldPending, 'Pending puzzles should be kept');
+      assert.ok(oldSolved, 'Solved puzzles must be preserved to protect token foreign keys');
+      assert.ok(token, 'Play token and score must remain intact');
+      assert.strictEqual(token.score, 42);
+    });
   });
 });
 

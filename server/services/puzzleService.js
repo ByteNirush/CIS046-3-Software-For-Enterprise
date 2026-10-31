@@ -19,14 +19,15 @@ function getDb(customDb) {
 }
 
 /**
- * Cleans up old puzzles that are no longer pending and older than 1 hour.
+ * Cleans up old failed or expired puzzles older than 1 hour.
+ * Preserves solved puzzles to protect associated play tokens and leaderboard records.
  */
 export function cleanupOldPuzzles(customDb) {
   const dbToUse = getDb(customDb);
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   dbToUse
     .prepare(
-      "DELETE FROM puzzles WHERE status != 'pending' AND (created_at < ? OR datetime(created_at) < datetime('now', '-1 hour'))"
+      "DELETE FROM puzzles WHERE status IN ('failed', 'expired') AND (created_at < ? OR datetime(created_at) < datetime('now', '-1 hour'))"
     )
     .run(oneHourAgo);
 }
