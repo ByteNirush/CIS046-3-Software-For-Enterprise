@@ -1,0 +1,338 @@
+
+> banana-clash@1.0.0 test
+> npm run test:server && npm run test:client
+
+
+> banana-clash@1.0.0 test:server
+> npm --prefix server test
+
+
+> banana-arcade-server@1.0.0 test
+> node --test
+
+TAP version 13
+# Subtest: puzzleService.checkAnswer
+    # Subtest: correct answer returns { correct: true } and marks puzzle solved
+    ok 1 - correct answer returns { correct: true } and marks puzzle solved
+      ---
+      duration_ms: 4.405125
+      ...
+    # Subtest: wrong answer decrements attempts and returns { correct: false, attemptsLeft }
+    ok 2 - wrong answer decrements attempts and returns { correct: false, attemptsLeft }
+      ---
+      duration_ms: 0.895959
+      ...
+    # Subtest: failure after reaching max attempts (3 wrong guesses)
+    ok 3 - failure after reaching max attempts (3 wrong guesses)
+      ---
+      duration_ms: 0.793708
+      ...
+    # Subtest: expired puzzle returns { status: "expired" } and updates database status
+    ok 4 - expired puzzle returns { status: "expired" } and updates database status
+      ---
+      duration_ms: 0.586792
+      ...
+    # Subtest: puzzle belonging to another user returns not found (no existence leak)
+    ok 5 - puzzle belonging to another user returns not found (no existence leak)
+      ---
+      duration_ms: 0.744334
+      ...
+    # Subtest: solved puzzle cannot be answered again and returns { status: "not_active" }
+    ok 6 - solved puzzle cannot be answered again and returns { status: "not_active" }
+      ---
+      duration_ms: 0.816042
+      ...
+    # Subtest: cleanupOldPuzzles
+        # Subtest: deletes failed and expired puzzles older than 1 hour, but preserves solved and pending puzzles
+        ok 1 - deletes failed and expired puzzles older than 1 hour, but preserves solved and pending puzzles
+          ---
+          duration_ms: 0.93125
+          ...
+        1..1
+    ok 7 - cleanupOldPuzzles
+      ---
+      duration_ms: 1.130209
+      type: 'suite'
+      ...
+    1..7
+ok 1 - puzzleService.checkAnswer
+  ---
+  duration_ms: 10.617791
+  type: 'suite'
+  ...
+# [Audit] Category: implausible score, User ID: 1, Elapsed Time: 1000ms
+# [Audit] Category: implausible score, User ID: 1, Elapsed Time: 5000ms
+# [Audit] Category: implausible score, User ID: 1, Elapsed Time: 5000ms
+# [Audit] Category: implausible score, User ID: 1, Elapsed Time: 5000ms
+# Subtest: Score Service & Leaderboard (scoreService)
+    # Subtest: maxPlausibleScore boundaries
+        # Subtest: calculates plausible score upper bounds correctly across time intervals
+        ok 1 - calculates plausible score upper bounds correctly across time intervals
+          ---
+          duration_ms: 1.741208
+          ...
+        1..1
+    ok 1 - maxPlausibleScore boundaries
+      ---
+      duration_ms: 2.149833
+      type: 'suite'
+      ...
+    # Subtest: finishRun validation and persistence
+        # Subtest: finishRun saves a plausible score
+        ok 1 - finishRun saves a plausible score
+          ---
+          duration_ms: 2.436667
+          ...
+        # Subtest: rejects a score above the bound and voids the run
+        ok 2 - rejects a score above the bound and voids the run
+          ---
+          duration_ms: 1.578667
+          ...
+        # Subtest: rejects negative, fractional and non-numeric scores
+        ok 3 - rejects negative, fractional and non-numeric scores
+          ---
+          duration_ms: 1.167834
+          ...
+        # Subtest: returns alreadySaved when finishing twice (and the stored score is unchanged by a second, different score)
+        ok 4 - returns alreadySaved when finishing twice (and the stored score is unchanged by a second, different score)
+          ---
+          duration_ms: 0.709625
+          ...
+        # Subtest: returns notFound for another user's run
+        ok 5 - returns notFound for another user's run
+          ---
+          duration_ms: 0.6515
+          ...
+        # Subtest: returns notActive for an 'unused' token
+        ok 6 - returns notActive for an 'unused' token
+          ---
+          duration_ms: 0.81275
+          ...
+        # Subtest: returns expired for a run older than RUN_MAX_SECONDS
+        ok 7 - returns expired for a run older than RUN_MAX_SECONDS
+          ---
+          duration_ms: 0.57275
+          ...
+        1..7
+    ok 2 - finishRun validation and persistence
+      ---
+      duration_ms: 8.386584
+      type: 'suite'
+      ...
+    # Subtest: getLeaderboard querying and ranking
+        # Subtest: uses best score per user, orders correctly, breaks ties by earlier achievement, never includes user ids, and returns the right rank for me
+        ok 1 - uses best score per user, orders correctly, breaks ties by earlier achievement, never includes user ids, and returns the right rank for me
+          ---
+          duration_ms: 1.520291
+          ...
+        1..1
+    ok 3 - getLeaderboard querying and ranking
+      ---
+      duration_ms: 1.609792
+      type: 'suite'
+      ...
+    1..3
+ok 2 - Score Service & Leaderboard (scoreService)
+  ---
+  duration_ms: 12.945458
+  type: 'suite'
+  ...
+# Subtest: Play Tokens and Game Runs (tokenService)
+    # Subtest: a correct answer creates exactly one token
+    ok 1 - a correct answer creates exactly one token
+      ---
+      duration_ms: 3.5555
+      ...
+    # Subtest: a wrong answer creates none
+    ok 2 - a wrong answer creates none
+      ---
+      duration_ms: 1.042375
+      ...
+    # Subtest: startRun spends the oldest unused token
+    ok 3 - startRun spends the oldest unused token
+      ---
+      duration_ms: 1.036958
+      ...
+    # Subtest: a second startRun with no tokens returns null
+    ok 4 - a second startRun with no tokens returns null
+      ---
+      duration_ms: 0.757041
+      ...
+    # Subtest: an expired token cannot be started
+    ok 5 - an expired token cannot be started
+      ---
+      duration_ms: 0.812542
+      ...
+    # Subtest: a token of another user cannot be used
+    ok 6 - a token of another user cannot be used
+      ---
+      duration_ms: 0.818375
+      ...
+    # Subtest: two quick startRun calls with one token only succeed once
+    ok 7 - two quick startRun calls with one token only succeed once
+      ---
+      duration_ms: 0.79675
+      ...
+    # Subtest: a started token older than RUN_MAX_SECONDS counts as expired
+    ok 8 - a started token older than RUN_MAX_SECONDS counts as expired
+      ---
+      duration_ms: 0.605083
+      ...
+    1..8
+ok 3 - Play Tokens and Game Runs (tokenService)
+  ---
+  duration_ms: 10.790291
+  type: 'suite'
+  ...
+1..3
+# tests 24
+# suites 7
+# pass 24
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.466792
+
+> banana-clash@1.0.0 test:client
+> npm --prefix client test
+
+
+> banana-arcade-client@1.0.0 test
+> node --test
+
+TAP version 13
+# Subtest: rectsOverlap collision detection
+    # Subtest: returns true when rectangles overlap completely or partially
+    ok 1 - returns true when rectangles overlap completely or partially
+      ---
+      duration_ms: 0.91525
+      ...
+    # Subtest: returns false when rectangles are horizontally separated
+    ok 2 - returns false when rectangles are horizontally separated
+      ---
+      duration_ms: 0.1225
+      ...
+    # Subtest: returns false when rectangles are vertically separated
+    ok 3 - returns false when rectangles are vertically separated
+      ---
+      duration_ms: 0.094875
+      ...
+    # Subtest: returns false when rectangles only touch edges without overlapping
+    ok 4 - returns false when rectangles only touch edges without overlapping
+      ---
+      duration_ms: 0.791625
+      ...
+    # Subtest: handles corner overlap
+    ok 5 - handles corner overlap
+      ---
+      duration_ms: 0.167416
+      ...
+    # Subtest: returns false for null or undefined bounding boxes
+    ok 6 - returns false for null or undefined bounding boxes
+      ---
+      duration_ms: 0.077083
+      ...
+    1..6
+ok 1 - rectsOverlap collision detection
+  ---
+  duration_ms: 3.38225
+  type: 'suite'
+  ...
+# Subtest: EventEmitter
+    # Subtest: registers handlers and receives emitted events with payloads
+    ok 1 - registers handlers and receives emitted events with payloads
+      ---
+      duration_ms: 1.153166
+      ...
+    # Subtest: unsubscribes using the returned cleanup function
+    ok 2 - unsubscribes using the returned cleanup function
+      ---
+      duration_ms: 0.148667
+      ...
+    # Subtest: unsubscribes using off(event, handler)
+    ok 3 - unsubscribes using off(event, handler)
+      ---
+      duration_ms: 0.105125
+      ...
+    # Subtest: supports multiple listeners for the same event independently
+    ok 4 - supports multiple listeners for the same event independently
+      ---
+      duration_ms: 0.755875
+      ...
+    # Subtest: handles emitting events with no listeners without throwing
+    ok 5 - handles emitting events with no listeners without throwing
+      ---
+      duration_ms: 0.267458
+      ...
+    # Subtest: handles safe unsubscription during emission
+    ok 6 - handles safe unsubscription during emission
+      ---
+      duration_ms: 0.127625
+      ...
+    1..6
+ok 2 - EventEmitter
+  ---
+  duration_ms: 3.635792
+  type: 'suite'
+  ...
+# Subtest: validateAuthCredentials
+    # Subtest: USERNAME_REGEX
+        # Subtest: matches valid alphanumeric usernames and underscores between 3 and 20 chars
+        ok 1 - matches valid alphanumeric usernames and underscores between 3 and 20 chars
+          ---
+          duration_ms: 0.692208
+          ...
+        # Subtest: rejects usernames that are too short or too long
+        ok 2 - rejects usernames that are too short or too long
+          ---
+          duration_ms: 0.875166
+          ...
+        # Subtest: rejects usernames with invalid characters or spaces
+        ok 3 - rejects usernames with invalid characters or spaces
+          ---
+          duration_ms: 0.105083
+          ...
+        1..3
+    ok 1 - USERNAME_REGEX
+      ---
+      duration_ms: 2.140416
+      type: 'suite'
+      ...
+    # Subtest: validateAuthCredentials function
+        # Subtest: returns null for valid credentials
+        ok 1 - returns null for valid credentials
+          ---
+          duration_ms: 0.136583
+          ...
+        # Subtest: returns appropriate error for invalid usernames
+        ok 2 - returns appropriate error for invalid usernames
+          ---
+          duration_ms: 0.087708
+          ...
+        # Subtest: returns appropriate error for invalid passwords
+        ok 3 - returns appropriate error for invalid passwords
+          ---
+          duration_ms: 0.090291
+          ...
+        1..3
+    ok 2 - validateAuthCredentials function
+      ---
+      duration_ms: 0.528875
+      type: 'suite'
+      ...
+    1..2
+ok 3 - validateAuthCredentials
+  ---
+  duration_ms: 3.634791
+  type: 'suite'
+  ...
+1..3
+# tests 18
+# suites 5
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 121.768875
