@@ -13,6 +13,8 @@ function NavBar() {
   return (
     <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid #ccc' }}>
       <Link to="/">Home</Link>
+      {user && <Link to="/puzzle">Puzzle</Link>}
+      {user && <Link to="/game">Game</Link>}
       <Link to="/leaderboard">Leaderboard</Link>
       {user ? (
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>

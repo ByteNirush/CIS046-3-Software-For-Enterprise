@@ -64,9 +64,9 @@ function PuzzlePage() {
     return () => clearInterval(intervalId);
   }, [puzzle, result, isExpired]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!puzzle?.id || !/^[0-9]$/.test(guess) || submitting) {
+  const doSubmit = async (valueToSubmit) => {
+    const val = valueToSubmit !== undefined ? valueToSubmit : guess;
+    if (!puzzle?.id || !/^[0-9]$/.test(val) || submitting) {
       return;
     }
 
@@ -74,7 +74,7 @@ function PuzzlePage() {
     setError(null);
 
     try {
-      const res = await submitAnswer(puzzle.id, guess);
+      const res = await submitAnswer(puzzle.id, val);
       setResult(res);
       setGuess('');
     } catch (err) {
@@ -91,6 +91,23 @@ function PuzzlePage() {
       }
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
+    doSubmit(guess);
+  };
+
+  const handleSelectNumber = (numStr) => {
+    if (isDisabled) return;
+    if (guess === numStr) {
+      // If user clicks the already selected number, submit it directly
+      doSubmit(numStr);
+    } else {
+      setGuess(numStr);
     }
   };
 
@@ -151,30 +168,44 @@ function PuzzlePage() {
               {/* Solved state */}
               {isSolved && (
                 <div style={{ margin: '1.5rem 0' }}>
-                  <p style={{ color: '#2e7d32', fontWeight: 'bold', fontSize: '1.25rem' }}>
-                    Puzzle solved! You unlocked a game play!
+                  <p style={{ color: '#2e7d32', fontWeight: 'bold', fontSize: '1.25rem', marginBottom: '1rem' }}>
+                    🎉 Puzzle solved! You unlocked an arcade play!
                   </p>
-                  {result?.unlocked ? (
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                     <Link
                       to="/game"
                       style={{
                         display: 'inline-block',
-                        padding: '0.6rem 1.5rem',
+                        padding: '0.6rem 1.6rem',
                         backgroundColor: '#4caf50',
                         color: '#fff',
                         textDecoration: 'none',
                         borderRadius: '4px',
                         fontWeight: 'bold',
                         fontSize: '1rem',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                       }}
                     >
-                      Play game
+                      🎮 Play Game
                     </Link>
-                  ) : (
-                    <button disabled style={{ padding: '0.5rem 1.5rem', cursor: 'not-allowed', opacity: 0.6 }}>
-                      Play game
+                    <button
+                      type="button"
+                      onClick={loadPuzzle}
+                      disabled={loading}
+                      style={{
+                        padding: '0.6rem 1.6rem',
+                        backgroundColor: '#f5f5f5',
+                        color: '#333',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        fontWeight: 'bold',
+                        fontSize: '1rem',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      Solve another puzzle
                     </button>
-                  )}
+                  </div>
                 </div>
               )}
 
@@ -198,44 +229,116 @@ function PuzzlePage() {
                 </div>
               )}
 
-              {/* Form input and submission */}
+              {/* Form input and submission with selectable number pad */}
               {!isSolved && !isFailed && !isExpired && (
-                <form onSubmit={handleSubmit} style={{ marginTop: '1rem' }}>
-                  <label htmlFor="guess-input" style={{ marginRight: '0.5rem' }}>
-                    Your answer (0-9):
-                  </label>
-                  <input
-                    id="guess-input"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={guess}
-                    onChange={(e) => setGuess(e.target.value.replace(/\D/g, ''))}
-                    disabled={isDisabled}
-                    style={{
-                      width: '3rem',
-                      textAlign: 'center',
-                      fontSize: '1.2rem',
-                      padding: '0.25rem',
-                      marginRight: '0.5rem',
-                    }}
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    disabled={isDisabled || !guess}
-                    style={{ padding: '0.4rem 1rem', marginRight: '0.5rem' }}
-                  >
-                    {submitting ? 'Submitting...' : 'Submit'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={loadPuzzle}
-                    disabled={loading || submitting}
-                    style={{ padding: '0.4rem 1rem' }}
-                  >
-                    New puzzle
-                  </button>
+                <form onSubmit={handleSubmit} style={{ marginTop: '1.25rem' }}>
+                  {/* Number selection buttons (0-9) */}
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ marginBottom: '0.5rem', fontSize: '0.95rem', color: '#555', fontWeight: 'bold' }}>
+                      Select your answer:
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        flexWrap: 'wrap',
+                        gap: '0.4rem',
+                        maxWidth: '480px',
+                        margin: '0 auto',
+                      }}
+                      role="group"
+                      aria-label="Select answer number 0 to 9"
+                    >
+                      {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => {
+                        const numStr = String(num);
+                        const isSelected = guess === numStr;
+                        return (
+                          <button
+                            key={num}
+                            type="button"
+                            disabled={isDisabled}
+                            onClick={() => handleSelectNumber(numStr)}
+                            style={{
+                              width: '42px',
+                              height: '42px',
+                              fontSize: '1.2rem',
+                              fontWeight: isSelected ? 'bold' : '600',
+                              borderRadius: '6px',
+                              border: isSelected ? '2px solid #e0a800' : '1px solid #ccc',
+                              backgroundColor: isSelected ? '#ffc107' : '#f8f9fa',
+                              color: isSelected ? '#000' : '#333',
+                              cursor: isDisabled ? 'not-allowed' : 'pointer',
+                              boxShadow: isSelected ? '0 2px 6px rgba(224, 168, 0, 0.4)' : 'none',
+                              transform: isSelected ? 'scale(1.06)' : 'scale(1)',
+                              transition: 'all 0.15s ease',
+                            }}
+                            aria-pressed={isSelected}
+                            title={`Select ${num}${isSelected ? ' (click again to submit)' : ''}`}
+                          >
+                            {num}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Input display and action buttons */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                    <label htmlFor="guess-input" style={{ marginRight: '0.25rem' }}>
+                      Your answer (0-9):
+                    </label>
+                    <input
+                      id="guess-input"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={guess}
+                      onChange={(e) => setGuess(e.target.value.replace(/\D/g, ''))}
+                      disabled={isDisabled}
+                      placeholder="-"
+                      style={{
+                        width: '3rem',
+                        textAlign: 'center',
+                        fontSize: '1.2rem',
+                        fontWeight: 'bold',
+                        padding: '0.25rem',
+                        marginRight: '0.5rem',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                      }}
+                      autoFocus
+                    />
+                    <button
+                      type="submit"
+                      disabled={isDisabled || !guess}
+                      style={{
+                        padding: '0.45rem 1.25rem',
+                        marginRight: '0.5rem',
+                        backgroundColor: isDisabled || !guess ? '#e0e0e0' : '#e0a800',
+                        color: isDisabled || !guess ? '#888' : '#000',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        fontWeight: 'bold',
+                        cursor: isDisabled || !guess ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      {submitting ? 'Submitting...' : 'Submit'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={loadPuzzle}
+                      disabled={loading || submitting}
+                      style={{
+                        padding: '0.45rem 1rem',
+                        backgroundColor: '#f5f5f5',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        cursor: loading || submitting ? 'not-allowed' : 'pointer',
+                      }}
+                    >
+                      New puzzle
+                    </button>
+                  </div>
                 </form>
               )}
             </div>

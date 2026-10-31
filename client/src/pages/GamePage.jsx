@@ -223,19 +223,37 @@ function GamePage() {
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+          {tokensAvailable > 0 && (
+            <button
+              type="button"
+              onClick={handleStartGame}
+              disabled={starting}
+              style={{
+                padding: '0.6rem 1.2rem',
+                backgroundColor: '#4caf50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontWeight: 'bold',
+                cursor: starting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {starting ? 'Starting...' : `Play Again (${tokensAvailable} left)`}
+            </button>
+          )}
           <Link
             to="/puzzle"
             style={{
               padding: '0.6rem 1.2rem',
-              backgroundColor: '#4caf50',
+              backgroundColor: tokensAvailable > 0 ? '#ff9800' : '#4caf50',
               color: 'white',
               textDecoration: 'none',
               borderRadius: '4px',
               fontWeight: 'bold',
             }}
           >
-            Solve another puzzle
+            {tokensAvailable > 0 ? 'Solve more puzzles' : 'Solve a puzzle to play'}
           </Link>
           <Link
             to="/leaderboard"

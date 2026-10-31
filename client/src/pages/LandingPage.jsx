@@ -17,9 +17,12 @@ function LandingPage() {
       ) : user ? (
         <div style={{ marginTop: '2rem' }}>
           <p>Logged in as <strong>{user.username}</strong></p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
             <Link to="/puzzle" style={{ padding: '0.5rem 1.5rem', background: '#e0a800', color: '#000', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
               Play Puzzle
+            </Link>
+            <Link to="/game" style={{ padding: '0.5rem 1.5rem', background: '#4caf50', color: '#fff', textDecoration: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
+              Arcade Game
             </Link>
             <Link to="/leaderboard" style={{ padding: '0.5rem 1.5rem', background: '#eee', color: '#333', textDecoration: 'none', borderRadius: '4px' }}>
               View Leaderboard
