@@ -22,3 +22,11 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Production builds
+dist/
+build/
+client/dist/
+
+# Archive files
+*.zip
+
