@@ -6,7 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import config from '../config/index.js';
 import { maxPlausibleScore } from '../config/gameRules.js';
-import { finishRun, getLeaderboard } from '../services/scoreService.js';
+import { finishRun, getLeaderboard, getUserGameProfile, abandonRun } from '../services/scoreService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -293,6 +293,71 @@ describe('Score Service & Leaderboard (scoreService)', () => {
       // Verify 'me' for a user with no finished runs
       const unrankedResult = getLeaderboard(10, 999, { db: memDb });
       assert.strictEqual(unrankedResult.me, null);
+    });
+  });
+
+  describe('getUserGameProfile arcade statistics', () => {
+    it('returns personal best, games count, and recent runs correctly', () => {
+      const now = new Date('2026-10-31T05:00:00Z').getTime();
+
+      // Seed dummy puzzle and 2 finished runs for user 1 (Alice)
+      memDb.prepare("INSERT INTO puzzles (id, user_id, solution, image, status, expires_at) VALUES ('p1', 1, '7', 'img', 'solved', '2026-10-31T06:00:00Z')").run();
+      memDb.prepare("INSERT INTO puzzles (id, user_id, solution, image, status, expires_at) VALUES ('p2', 1, '8', 'img', 'solved', '2026-10-31T06:00:00Z')").run();
+
+      memDb.prepare(
+        `INSERT INTO play_tokens (id, user_id, puzzle_id, status, created_at, expires_at, started_at, finished_at, score)
+         VALUES ('r1', 1, 'p1', 'finished', '2026-10-31T04:00:00Z', '2026-10-31T04:15:00Z', '2026-10-31T04:01:00Z', '2026-10-31T04:02:00Z', 12)`
+      ).run();
+
+      memDb.prepare(
+        `INSERT INTO play_tokens (id, user_id, puzzle_id, status, created_at, expires_at, started_at, finished_at, score)
+         VALUES ('r2', 1, 'p2', 'finished', '2026-10-31T04:30:00Z', '2026-10-31T04:45:00Z', '2026-10-31T04:31:00Z', '2026-10-31T04:32:00Z', 25)`
+      ).run();
+
+      const profile = getUserGameProfile(1, { db: memDb });
+      assert.strictEqual(profile.personalBest, 25);
+      assert.strictEqual(profile.totalGames, 2);
+      assert.strictEqual(profile.recentRuns.length, 2);
+      assert.strictEqual(profile.recentRuns[0].score, 25); // most recent first
+      assert.strictEqual(profile.recentRuns[1].score, 12);
+      assert.strictEqual(profile.activeRun, null);
+    });
+
+    it('returns zeroed defaults for a user with no games', () => {
+      const profile = getUserGameProfile(999, { db: memDb });
+      assert.strictEqual(profile.personalBest, 0);
+      assert.strictEqual(profile.totalGames, 0);
+      assert.strictEqual(profile.rank, null);
+      assert.deepStrictEqual(profile.recentRuns, []);
+      assert.strictEqual(profile.activeRun, null);
+    });
+  });
+
+  describe('abandonRun active session forfeiture', () => {
+    it('cancels an active started run by marking it expired', () => {
+      memDb.prepare("INSERT INTO puzzles (id, user_id, solution, image, status, expires_at) VALUES ('p-ab', 1, '5', 'img', 'solved', '2026-10-31T06:00:00Z')").run();
+      memDb.prepare(
+        `INSERT INTO play_tokens (id, user_id, puzzle_id, status, created_at, expires_at, started_at)
+         VALUES ('run-abandon', 1, 'p-ab', 'started', '2026-10-31T05:00:00Z', '2026-10-31T05:15:00Z', '2026-10-31T05:01:00Z')`
+      ).run();
+
+      const success = abandonRun(1, 'run-abandon', { db: memDb });
+      assert.strictEqual(success, true);
+
+      const row = memDb.prepare('SELECT status FROM play_tokens WHERE id = ?').get('run-abandon');
+      assert.strictEqual(row.status, 'expired');
+    });
+
+    it('refuses to abandon runs belonging to other users or already finished', () => {
+      memDb.prepare("INSERT INTO puzzles (id, user_id, solution, image, status, expires_at) VALUES ('p-ab2', 2, '5', 'img', 'solved', '2026-10-31T06:00:00Z')").run();
+      memDb.prepare(
+        `INSERT INTO play_tokens (id, user_id, puzzle_id, status, created_at, expires_at, started_at)
+         VALUES ('run-ab2', 2, 'p-ab2', 'started', '2026-10-31T05:00:00Z', '2026-10-31T05:15:00Z', '2026-10-31T05:01:00Z')`
+      ).run();
+
+      // User 1 tries to abandon user 2's run
+      const fail = abandonRun(1, 'run-ab2', { db: memDb });
+      assert.strictEqual(fail, false);
     });
   });
 });

@@ -58,7 +58,11 @@ export function finishRun(userId, runId, score, options = {}) {
 
     // 4. Server-side elapsed time computation
     const currentMs = getNow();
-    const startedMs = new Date(token.started_at).getTime();
+    const rawStarted = String(token.started_at || '');
+    const safeStartedIso = rawStarted.includes('T')
+      ? (rawStarted.endsWith('Z') ? rawStarted : rawStarted + 'Z')
+      : rawStarted.replace(' ', 'T') + (rawStarted.endsWith('Z') ? '' : 'Z');
+    const startedMs = new Date(safeStartedIso).getTime();
     const elapsedMs = currentMs - startedMs;
 
     // Check if run exceeded maximum allowed duration
@@ -212,9 +216,120 @@ export function getLeaderboard(limit = 10, userId = null, options = {}) {
   return result;
 }
 
+/**
+ * Retrieves a user's arcade game statistics, high score, and recent runs.
+ *
+ * @param {number} userId - The user ID
+ * @param {object} [options] - Custom db or time options
+ * @returns {{ personalBest: number, totalGames: number, rank: number|null, recentRuns: Array, activeRun: object|null }}
+ */
+export function getUserGameProfile(userId, options = {}) {
+  const dbToUse = getDb(options.db);
+  if (!userId) {
+    return {
+      personalBest: 0,
+      totalGames: 0,
+      rank: null,
+      recentRuns: [],
+      activeRun: null,
+    };
+  }
+
+  // Aggregate stats: highest finished score and total completed runs
+  const statsRow = dbToUse
+    .prepare(
+      `SELECT
+         COALESCE(MAX(score), 0) AS personalBest,
+         COUNT(CASE WHEN status = 'finished' AND score IS NOT NULL THEN 1 END) AS totalGames
+       FROM play_tokens
+       WHERE user_id = ?`
+    )
+    .get(userId);
+
+  // Recent 5 finished runs
+  const recentRuns = dbToUse
+    .prepare(
+      `SELECT id, score, finished_at AS finishedAt
+       FROM play_tokens
+       WHERE user_id = ? AND status = 'finished' AND score IS NOT NULL
+       ORDER BY datetime(finished_at) DESC, id DESC
+       LIMIT 5`
+    )
+    .all(userId);
+
+  // Active run (if currently started and within runMaxSeconds)
+  const activeRow = dbToUse
+    .prepare(
+      `SELECT id, started_at AS startedAt
+       FROM play_tokens
+       WHERE user_id = ? AND status = 'started'
+       ORDER BY datetime(started_at) DESC
+       LIMIT 1`
+    )
+    .get(userId);
+
+  let activeRun = null;
+  if (activeRow && activeRow.startedAt) {
+    const rawStarted = String(activeRow.startedAt);
+    const safeStartedIso = rawStarted.includes('T')
+      ? (rawStarted.endsWith('Z') ? rawStarted : rawStarted + 'Z')
+      : rawStarted.replace(' ', 'T') + (rawStarted.endsWith('Z') ? '' : 'Z');
+    const startedMs = new Date(safeStartedIso).getTime();
+    const elapsedSeconds = (Date.now() - startedMs) / 1000;
+    if (elapsedSeconds < config.runMaxSeconds) {
+      activeRun = {
+        runId: activeRow.id,
+        startedAt: activeRow.startedAt,
+        remainingSeconds: Math.max(0, Math.round(config.runMaxSeconds - elapsedSeconds)),
+      };
+    }
+  }
+
+  // User rank from leaderboard
+  let rank = null;
+  try {
+    const lb = getLeaderboard(10, userId, options);
+    if (lb.me && lb.me.rank) {
+      rank = lb.me.rank;
+    }
+  } catch (err) {
+    // Non-fatal if ranking calculation encounters an issue
+  }
+
+  return {
+    personalBest: statsRow ? statsRow.personalBest : 0,
+    totalGames: statsRow ? statsRow.totalGames : 0,
+    rank,
+    recentRuns: recentRuns || [],
+    activeRun,
+  };
+}
+
+/**
+ * Abandons an active run for a user.
+ *
+ * @param {number} userId - The user ID
+ * @param {string} runId - The ID of the token/run
+ * @param {object} [options] - Custom db options
+ * @returns {boolean} True if abandoned, false otherwise
+ */
+export function abandonRun(userId, runId, options = {}) {
+  const dbToUse = getDb(options.db);
+  const result = dbToUse
+    .prepare(
+      `UPDATE play_tokens
+       SET status = 'expired'
+       WHERE id = ? AND user_id = ? AND status = 'started'`
+    )
+    .run(runId, userId);
+  return result.changes > 0;
+}
+
 export default {
   finishRun,
   getLeaderboard,
+  getUserGameProfile,
+  abandonRun,
   setDatabase,
   resetDatabase,
 };

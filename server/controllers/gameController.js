@@ -1,17 +1,22 @@
 import { countAvailable, startRun } from '../services/tokenService.js';
-import { finishRun } from '../services/scoreService.js';
+import { finishRun, getUserGameProfile, abandonRun } from '../services/scoreService.js';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * GET /api/game/status
- * Returns the count of unused tokens available to the logged-in user.
+ * Returns the count of unused tokens available to the logged-in user along with their game stats.
  */
 export function getStatus(req, res, next) {
   try {
     const userId = req.session.userId || req.session.user?.id;
     const tokensAvailable = countAvailable(userId);
-    return res.status(200).json({ tokensAvailable });
+    const profile = getUserGameProfile(userId);
+
+    return res.status(200).json({
+      tokensAvailable,
+      ...profile,
+    });
   } catch (err) {
     return next(err);
   }
@@ -85,8 +90,29 @@ export function finish(req, res, next) {
   }
 }
 
+/**
+ * POST /api/game/abandon
+ * Forfeits or cancels an active run.
+ */
+export function abandon(req, res, next) {
+  try {
+    const userId = req.session.userId || req.session.user?.id;
+    const { runId } = req.body || {};
+
+    if (typeof runId !== 'string' || !UUID_REGEX.test(runId)) {
+      return res.status(400).json({ error: 'Valid runId UUID is required' });
+    }
+
+    const success = abandonRun(userId, runId);
+    return res.status(200).json({ abandoned: success });
+  } catch (err) {
+    return next(err);
+  }
+}
+
 export default {
   getStatus,
   start,
   finish,
+  abandon,
 };
