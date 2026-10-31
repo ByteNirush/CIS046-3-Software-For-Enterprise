@@ -1,8 +1,8 @@
 import { apiFetch } from './client.js';
 
 /**
- * Fetches the current game status, including the count of available play tokens.
- * @returns {Promise<{ tokensAvailable: number }>}
+ * Fetches the current game status, available play tokens, player stats, and active run.
+ * @returns {Promise<{ tokensAvailable: number, personalBest?: number, totalGames?: number, rank?: number|null, recentRuns?: Array, activeRun?: object|null }>}
  */
 export function getStatus() {
   return apiFetch('/api/game/status', {
@@ -35,8 +35,21 @@ export function finishGame(runId, score) {
   });
 }
 
+/**
+ * Forfeits or cancels an active run session.
+ * @param {string} runId
+ * @returns {Promise<{ abandoned: boolean }>}
+ */
+export function abandonGame(runId) {
+  return apiFetch('/api/game/abandon', {
+    method: 'POST',
+    body: { runId },
+  });
+}
+
 export default {
   getStatus,
   startGame,
   finishGame,
+  abandonGame,
 };
