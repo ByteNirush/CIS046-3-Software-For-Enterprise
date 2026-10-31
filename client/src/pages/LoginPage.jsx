@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
+import { validateAuthCredentials } from '../utils/validation.js';
 
 function LoginPage() {
   const [username, setUsername] = useState('');
@@ -11,21 +12,11 @@ function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const validate = () => {
-    if (!username.trim() || !/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
-      return 'Username must be 3–20 characters long and contain only letters, numbers, and underscores.';
-    }
-    if (!password || password.length < 8 || password.length > 72) {
-      return 'Password must be between 8 and 72 characters.';
-    }
-    return null;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
 
-    const validationError = validate();
+    const validationError = validateAuthCredentials(username, password);
     if (validationError) {
       setError(validationError);
       return;
