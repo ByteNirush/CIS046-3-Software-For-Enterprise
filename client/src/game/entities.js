@@ -50,26 +50,42 @@ export class Basket {
       height: this.height,
     };
   }
+
+  /**
+   * Returns the top catching rim bounds for realistic catching physics.
+   */
+  getCatchBounds() {
+    return {
+      x: this.x + 2,
+      y: this.y,
+      width: this.width - 4,
+      height: Math.max(12, this.height * 0.75),
+    };
+  }
 }
 
 /**
- * Represents a falling item (either a good banana or a spoiled one).
+ * Represents a falling item (standard banana, golden banana, heart, freeze, or spoiled fruit).
  */
 export class FallingItem {
   constructor(type, x, y, size = ITEM_SIZE, speed) {
-    this.type = type; // 'banana' | 'spoiled'
+    this.type = type; // 'banana' | 'golden' | 'heart' | 'freeze' | 'spoiled'
     this.x = x;
     this.y = y;
     this.size = size;
     this.speed = speed;
+    this.wobble = Math.random() * Math.PI * 2;
+    this.rotation = 0;
   }
 
   /**
-   * Advances the item downwards according to its speed.
+   * Advances the item downwards according to its speed and wobbles gently.
    * @param {number} dt - Delta time in seconds
    */
   update(dt) {
     this.y += this.speed * dt;
+    this.wobble += dt * 4;
+    this.rotation = Math.sin(this.wobble) * 0.18;
   }
 
   getBounds() {

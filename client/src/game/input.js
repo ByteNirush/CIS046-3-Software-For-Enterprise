@@ -1,11 +1,13 @@
 /**
- * Creates input handling for keyboard and pointer/touch controls.
+ * Creates input handling for keyboard, touch drag, on-screen controls, and pause shortcuts.
  * @param {HTMLCanvasElement} canvas
- * @returns {{ getDirection: () => number, getTargetX: () => number|null, destroy: () => void }}
+ * @param {() => void} [onTogglePause]
+ * @returns {{ getDirection: () => number, getTargetX: () => number|null, setVirtualDirection: (dir: number) => void, destroy: () => void }}
  */
-export function createInput(canvas) {
+export function createInput(canvas, onTogglePause) {
   let leftPressed = false;
   let rightPressed = false;
+  let virtualDirection = 0;
   let isPointerDown = false;
   let targetX = null;
 
@@ -26,6 +28,13 @@ export function createInput(canvas) {
       rightPressed = true;
       targetX = null;
       if (e.key === 'ArrowRight') e.preventDefault();
+    } else if (e.key === 'p' || e.key === 'P' || e.key === 'Escape' || e.key === ' ') {
+      if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+      }
+      if (typeof onTogglePause === 'function') {
+        onTogglePause();
+      }
     }
   }
 
@@ -70,12 +79,23 @@ export function createInput(canvas) {
 
   return {
     /**
-     * Returns direction based on keyboard keys: -1 (left), 1 (right), or 0 (neutral).
+     * Returns direction based on keyboard keys or virtual buttons: -1 (left), 1 (right), or 0 (neutral).
      */
     getDirection() {
+      if (virtualDirection !== 0) return virtualDirection;
       if (leftPressed && !rightPressed) return -1;
       if (rightPressed && !leftPressed) return 1;
       return 0;
+    },
+
+    /**
+     * Sets virtual direction from on-screen touch controls (-1, 0, 1).
+     */
+    setVirtualDirection(dir) {
+      virtualDirection = dir;
+      if (dir !== 0) {
+        targetX = null;
+      }
     },
 
     /**
