@@ -1,49 +1,54 @@
-async function handleResponse(response) {
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    const message = data.error || `Request failed with status ${response.status}`;
-    const error = new Error(message);
-    error.status = response.status;
-    error.data = data;
-    throw error;
-  }
-  return data;
-}
+import { apiFetch } from './client.js';
 
-export async function signup(username, password) {
-  const response = await fetch('/api/auth/signup', {
+/**
+ * Registers a new player account.
+ * @param {string} username
+ * @param {string} password
+ * @returns {Promise<{ user: { id: number, username: string } }>}
+ */
+export function signup(username, password) {
+  return apiFetch('/api/auth/signup', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
-    body: JSON.stringify({ username, password }),
+    body: { username, password },
   });
-  return handleResponse(response);
 }
 
-export async function login(username, password) {
-  const response = await fetch('/api/auth/login', {
+/**
+ * Authenticates an existing player.
+ * @param {string} username
+ * @param {string} password
+ * @returns {Promise<{ user: { id: number, username: string } }>}
+ */
+export function login(username, password) {
+  return apiFetch('/api/auth/login', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
-    body: JSON.stringify({ username, password }),
+    body: { username, password },
   });
-  return handleResponse(response);
 }
 
-export async function logout() {
-  const response = await fetch('/api/auth/logout', {
+/**
+ * Ends the authenticated session and clears the session cookie.
+ * @returns {Promise<{ ok: boolean }>}
+ */
+export function logout() {
+  return apiFetch('/api/auth/logout', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'same-origin',
   });
-  return handleResponse(response);
 }
 
-export async function getMe() {
-  const response = await fetch('/api/auth/me', {
+/**
+ * Fetches the currently authenticated session user, if any.
+ * @returns {Promise<{ user: { id: number, username: string } | null }>}
+ */
+export function getMe() {
+  return apiFetch('/api/auth/me', {
     method: 'GET',
-    credentials: 'same-origin',
   });
-  return handleResponse(response);
 }
 
+export default {
+  signup,
+  login,
+  logout,
+  getMe,
+};
